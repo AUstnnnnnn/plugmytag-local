@@ -4,34 +4,21 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>PlugMyTag — Free Producer Tag Generator</title>
-<meta name="description" content="Free producer-tag generator. Runs entirely in your browser. No API keys, no cloud, no signup." />
+<meta name="description" content="Free producer-tag generator. Runs entirely in your browser. Neural voice via Piper. No API keys." />
 <meta name="theme-color" content="#0a0a12" />
-<meta property="og:title" content="PlugMyTag — Free Producer Tag Generator" />
-<meta property="og:description" content="Free producer tag generator. Runs in your browser." />
-<meta property="og:type" content="website" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ff3d6e'/%3E%3Cpath d='M12 10l10 6-10 6z' fill='white'/%3E%3C/svg%3E" />
 <style>
   :root {
-    --bg: #09090f;
-    --bg-2: #0e0e18;
-    --panel: #121220;
-    --panel-2: #171728;
-    --panel-3: #1c1c30;
-    --line: #23233a;
-    --line-2: #2e2e46;
-    --text: #f0f0f7;
-    --muted: #8a8ba3;
-    --muted-2: #5a5b74;
-    --accent: #ff3d6e;
-    --accent-2: #7c5cff;
-    --accent-3: #31d0aa;
-    --danger: #ff7a8a;
-    --radius: 14px;
+    --bg: #09090f; --bg-2: #0e0e18;
+    --panel: #121220; --panel-2: #171728; --panel-3: #1c1c30;
+    --line: #23233a; --line-2: #2e2e46;
+    --text: #f0f0f7; --muted: #8a8ba3; --muted-2: #5a5b74;
+    --accent: #ff3d6e; --accent-2: #7c5cff; --accent-3: #31d0aa;
+    --danger: #ff7a8a; --radius: 14px;
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
     --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
     --ease: cubic-bezier(0.4, 0, 0.2, 1);
   }
-
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
@@ -42,25 +29,19 @@
       var(--bg);
     color: var(--text);
     font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, "Inter", "Segoe UI", sans-serif;
-    font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
     display: flex; justify-content: center;
     padding: 40px 16px 80px;
   }
   .app { width: 100%; max-width: 720px; }
   ::selection { background: rgba(124,92,255,0.35); color: var(--text); }
 
-  /* Header */
   .head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
   .logo {
-    width: 34px; height: 34px; border-radius: 10px; position: relative;
+    width: 34px; height: 34px; border-radius: 10px; position: relative; flex-shrink: 0;
     background: conic-gradient(from 210deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent));
-    flex-shrink: 0;
   }
-  .logo::after {
-    content: ""; position: absolute; inset: 4px; border-radius: 7px; background: var(--bg);
-  }
+  .logo::after { content: ""; position: absolute; inset: 4px; border-radius: 7px; background: var(--bg); }
   .logo::before {
     content: ""; position: absolute; inset: 0;
     background: conic-gradient(from 210deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent));
@@ -71,24 +52,19 @@
     background: linear-gradient(180deg, #fff 20%, #c5bffc 140%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .sub { color: var(--muted); font-size: 13px; margin: 0 0 26px 46px; letter-spacing: -0.005em; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 26px 46px; }
 
-  /* Panels */
   .panel {
     background: linear-gradient(180deg, var(--panel), var(--panel-2));
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
+    border: 1px solid var(--line); border-radius: var(--radius);
     padding: 16px; margin-bottom: 12px;
-    box-shadow:
-      0 1px 0 rgba(255,255,255,0.035) inset,
-      0 12px 32px -12px rgba(0,0,0,0.5);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.035) inset, 0 12px 32px -12px rgba(0,0,0,0.5);
   }
   .panel h2 {
     margin: 0 0 12px; font-size: 10px; font-weight: 600;
     color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em;
   }
 
-  /* Presets */
   .presets {
     display: flex; gap: 6px; overflow-x: auto;
     scrollbar-width: thin; scrollbar-color: var(--line-2) transparent;
@@ -96,30 +72,23 @@
   }
   .presets::-webkit-scrollbar { height: 5px; }
   .presets::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 3px; }
-
   .preset {
     flex: 0 0 auto; padding: 8px 13px; border-radius: 999px;
     background: var(--panel-3); border: 1px solid var(--line);
     color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer;
     white-space: nowrap; font-family: inherit;
-    transition: transform 160ms var(--ease-out),
-                background 160ms var(--ease-out),
-                border-color 160ms var(--ease-out),
-                color 160ms var(--ease-out);
+    transition: transform 160ms var(--ease-out), background 160ms var(--ease-out),
+                border-color 160ms var(--ease-out), color 160ms var(--ease-out);
     opacity: 0; transform: translateY(6px);
     animation: stagger-in 320ms var(--ease-out) forwards;
   }
   .preset:active { transform: scale(0.97); }
   .preset.active {
     background: linear-gradient(135deg, rgba(255,61,110,0.22), rgba(124,92,255,0.22));
-    border-color: rgba(255,61,110,0.6);
-    color: #fff;
+    border-color: rgba(255,61,110,0.6); color: #fff;
   }
-  .preset .ico { margin-right: 5px; filter: saturate(1.1); }
-
-  @keyframes stagger-in {
-    to { opacity: 1; transform: translateY(0); }
-  }
+  .preset .ico { margin-right: 5px; }
+  @keyframes stagger-in { to { opacity: 1; transform: translateY(0); } }
   .preset:nth-child(1)  { animation-delay: 0ms; }
   .preset:nth-child(2)  { animation-delay: 30ms; }
   .preset:nth-child(3)  { animation-delay: 60ms; }
@@ -133,7 +102,6 @@
   .preset:nth-child(11) { animation-delay: 300ms; }
   .preset:nth-child(12) { animation-delay: 330ms; }
 
-  /* Fields */
   label.field {
     display: block; font-size: 10px; color: var(--muted);
     text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 7px; font-weight: 600;
@@ -141,28 +109,34 @@
   input[type=text], select {
     width: 100%; background: #0a0a14; color: var(--text);
     border: 1px solid var(--line); border-radius: 10px;
-    padding: 11px 14px; font-size: 14.5px; outline: none;
-    font-family: inherit;
-    transition: border-color 180ms var(--ease-out),
-                background 180ms var(--ease-out);
+    padding: 11px 14px; font-size: 14.5px; outline: none; font-family: inherit;
+    transition: border-color 180ms var(--ease-out), background 180ms var(--ease-out);
   }
   input[type=text]:hover, select:hover { border-color: var(--line-2); }
-  input[type=text]:focus, select:focus {
-    border-color: var(--accent-2); background: #0c0c18;
-  }
+  input[type=text]:focus, select:focus { border-color: var(--accent-2); background: #0c0c18; }
   select {
     appearance: none; -webkit-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%238a8ba3' stroke-width='1.5'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    padding-right: 36px;
+    background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
   }
-  .row { display: grid; gap: 10px; }
+  .row { display: grid; gap: 12px; }
   .row.two { grid-template-columns: 1fr 1fr; }
-  .row.four { grid-template-columns: 1fr 1fr 1fr 1fr; }
-  @media (max-width: 520px) { .row.four { grid-template-columns: 1fr 1fr; } }
 
-  /* Effect toggles */
+  /* Control = label+val inline, slider below */
+  .ctrl { display: flex; flex-direction: column; gap: 6px; }
+  .ctrl-hd {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .ctrl-hd .val {
+    color: var(--text); font-size: 12px; letter-spacing: 0; font-weight: 500;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-variant-numeric: tabular-nums; text-transform: none;
+  }
+  .ctrl input[type=range] { width: 100%; }
+
+  /* Effects */
   .fx {
     display: grid; gap: 7px;
     grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
@@ -171,11 +145,9 @@
     display: flex; align-items: center; gap: 9px;
     background: #0b0b15; border: 1px solid var(--line);
     border-radius: 10px; padding: 10px 12px; cursor: pointer;
-    user-select: none; font-size: 14px;
-    transition: border-color 180ms var(--ease-out),
-                background 180ms var(--ease-out),
+    user-select: none; font-size: 14px; position: relative; overflow: hidden;
+    transition: border-color 180ms var(--ease-out), background 180ms var(--ease-out),
                 transform 140ms var(--ease-out);
-    position: relative; overflow: hidden;
   }
   .fx-item:active { transform: scale(0.98); }
   @media (hover: hover) and (pointer: fine) {
@@ -188,33 +160,22 @@
   }
   .fx-item .dot {
     width: 7px; height: 7px; border-radius: 50%; background: var(--muted-2);
-    transition: background 200ms var(--ease-out),
-                box-shadow 200ms var(--ease-out);
+    transition: background 200ms var(--ease-out), box-shadow 200ms var(--ease-out);
   }
-  .fx-item.on .dot {
-    background: var(--accent);
-    box-shadow: 0 0 10px var(--accent), 0 0 2px var(--accent);
-  }
+  .fx-item.on .dot { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
   .fx-item .lbl { transition: color 200ms var(--ease-out); }
   .fx-item.on .lbl { color: #fff; }
 
-  /* Sliders */
-  .slider-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
-  .slider-row .val {
-    color: var(--muted); min-width: 40px; text-align: right;
-    font-variant-numeric: tabular-nums; font-size: 12px;
-    font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  }
+  /* Range */
   input[type=range] {
-    flex: 1; -webkit-appearance: none; appearance: none;
-    background: transparent; height: 24px; cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+    background: transparent; height: 22px; cursor: pointer;
   }
   input[type=range]::-webkit-slider-runnable-track { height: 4px; background: var(--line); border-radius: 2px; }
   input[type=range]::-moz-range-track { height: 4px; background: var(--line); border-radius: 2px; border: 0; }
   input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none; appearance: none;
-    width: 14px; height: 14px; border-radius: 50%;
-    background: #fff; border: 0; margin-top: -5px;
+    width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 0; margin-top: -5px;
     box-shadow: 0 0 0 1px var(--line-2), 0 4px 10px rgba(0,0,0,0.35);
     transition: transform 140ms var(--ease-out);
   }
@@ -225,45 +186,36 @@
   input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.15); }
   input[type=range]:active::-webkit-slider-thumb { transform: scale(1.25); }
 
-  /* Generate button */
+  /* Primary button */
   button.primary {
     width: 100%; padding: 14px 18px; border: 0; border-radius: 12px;
     background: linear-gradient(90deg, var(--accent), var(--accent-2));
-    color: white; font-weight: 600; font-size: 15px; cursor: pointer;
-    letter-spacing: -0.005em; font-family: inherit;
-    transition: transform 140ms var(--ease-out),
-                filter 180ms var(--ease-out);
-    box-shadow: 0 8px 22px -4px rgba(124,92,255,0.35),
-                0 1px 0 rgba(255,255,255,0.15) inset;
+    color: white; font-weight: 600; font-size: 15px; cursor: pointer; font-family: inherit;
+    transition: transform 140ms var(--ease-out), filter 180ms var(--ease-out);
+    box-shadow: 0 8px 22px -4px rgba(124,92,255,0.35), 0 1px 0 rgba(255,255,255,0.15) inset;
     position: relative; overflow: hidden;
   }
   button.primary:hover { filter: brightness(1.08); }
   button.primary:active { transform: scale(0.98); }
   button.primary:disabled { cursor: progress; filter: brightness(0.85); }
-
   button.primary .btn-content {
     display: inline-flex; align-items: center; gap: 8px;
     transition: filter 200ms var(--ease-out), opacity 200ms var(--ease-out);
   }
-  button.primary.loading .btn-content {
-    filter: blur(3px); opacity: 0.5;
-  }
+  button.primary.loading .btn-content { filter: blur(3px); opacity: 0.5; }
   button.primary.loading::after {
-    content: "";
-    position: absolute; inset: 0;
+    content: ""; position: absolute; inset: 0;
     background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
     animation: shimmer 1.2s var(--ease-in-out) infinite;
   }
   @keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
+    0% { transform: translateX(-100%); } 100% { transform: translateX(100%); }
   }
 
   /* Output */
   .output {
     overflow: hidden; max-height: 0; opacity: 0; margin-top: 0;
-    transition: max-height 360ms var(--ease-out),
-                opacity 260ms var(--ease-out),
+    transition: max-height 360ms var(--ease-out), opacity 260ms var(--ease-out),
                 margin-top 360ms var(--ease-out);
   }
   .output.show { max-height: 240px; opacity: 1; margin-top: 14px; }
@@ -276,10 +228,9 @@
     display: inline-flex; align-items: center; gap: 6px;
     padding: 9px 13px; border-radius: 10px;
     background: var(--panel-3); border: 1px solid var(--line); color: var(--text);
-    text-decoration: none; font-size: 13px; font-weight: 500;
-    transition: transform 140ms var(--ease-out),
-                border-color 180ms var(--ease-out);
-    cursor: pointer; font-family: inherit;
+    text-decoration: none; font-size: 13px; font-weight: 500; cursor: pointer;
+    font-family: inherit;
+    transition: transform 140ms var(--ease-out), border-color 180ms var(--ease-out);
   }
   .dl:hover { border-color: var(--accent-2); }
   .dl:active { transform: scale(0.97); }
@@ -287,28 +238,22 @@
     background: linear-gradient(135deg, rgba(255,61,110,0.18), rgba(124,92,255,0.18));
     border-color: rgba(255,61,110,0.5);
   }
-  .hint {
-    color: var(--muted); font-size: 12px;
-    font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  }
+  .hint { color: var(--muted); font-size: 12px;
+          font-family: ui-monospace, "SF Mono", Menlo, monospace; }
 
-  /* Status banner */
+  /* Status (download progress) */
   .status {
     display: flex; align-items: center; gap: 10px;
     color: var(--muted); font-size: 13px; padding: 10px 14px;
     background: var(--panel-2); border: 1px solid var(--line);
-    border-radius: 10px; margin-bottom: 12px; overflow: hidden;
-    transition: opacity 240ms var(--ease-out),
-                transform 240ms var(--ease-out),
-                max-height 320ms var(--ease-out),
-                margin-bottom 320ms var(--ease-out),
-                padding 320ms var(--ease-out),
+    border-radius: 10px; margin-bottom: 12px; overflow: hidden; max-height: 60px;
+    transition: opacity 240ms var(--ease-out), max-height 320ms var(--ease-out),
+                margin-bottom 320ms var(--ease-out), padding 320ms var(--ease-out),
                 border-width 320ms var(--ease-out);
-    max-height: 48px;
   }
   .status.hidden {
-    opacity: 0; transform: translateY(-4px); pointer-events: none;
-    max-height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0;
+    opacity: 0; max-height: 0; margin-bottom: 0;
+    padding-top: 0; padding-bottom: 0;
     border-top-width: 0; border-bottom-width: 0;
   }
   .status .spinner {
@@ -321,18 +266,24 @@
     box-shadow: 0 0 8px var(--accent-3);
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+  .status .progress-bar {
+    flex: 1; height: 3px; background: var(--line);
+    border-radius: 2px; overflow: hidden; margin-left: 4px;
+  }
+  .status .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    width: 0%;
+    transition: width 200ms var(--ease);
+  }
 
-  /* Error */
   .err {
     color: var(--danger); font-size: 13px; margin-top: 10px;
-    background: rgba(255,122,138,0.08);
-    border: 1px solid rgba(255,122,138,0.25);
-    padding: 10px 12px; border-radius: 8px;
-    display: none;
+    background: rgba(255,122,138,0.08); border: 1px solid rgba(255,122,138,0.25);
+    padding: 10px 12px; border-radius: 8px; display: none;
   }
   .err.show { display: block; }
 
-  /* Footer */
   .footer { text-align: center; color: var(--muted-2); font-size: 12px; margin-top: 28px; }
   .footer a { color: var(--muted); text-decoration: none;
               transition: color 180ms var(--ease); }
@@ -358,11 +309,14 @@
     <div class="logo"></div>
     <h1>PlugMyTag</h1>
   </div>
-  <div class="sub">Free producer-tag generator. Runs entirely in your browser.</div>
+  <div class="sub">Free producer-tag generator. Neural voice. Runs in your browser.</div>
 
   <div class="status" id="status">
     <span class="spinner"></span>
-    <span id="statusText">Loading voice engine…</span>
+    <span id="statusText">Ready</span>
+    <div class="progress-bar" id="progressBar" style="display:none">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
   </div>
 
   <div class="panel">
@@ -378,34 +332,14 @@
 
   <div class="panel">
     <h2>Voice</h2>
-    <div class="row four">
+    <div class="row two">
       <div>
-        <label class="field">Speed</label>
-        <div class="slider-row">
-          <input id="speed" type="range" min="20" max="200" step="1" value="72" />
-          <span class="val" id="speedVal">72</span>
-        </div>
+        <label class="field" for="voice">Voice model</label>
+        <select id="voice"></select>
       </div>
-      <div>
-        <label class="field">Pitch</label>
-        <div class="slider-row">
-          <input id="pitch" type="range" min="0" max="255" step="1" value="64" />
-          <span class="val" id="pitchVal">64</span>
-        </div>
-      </div>
-      <div>
-        <label class="field">Throat</label>
-        <div class="slider-row">
-          <input id="throat" type="range" min="0" max="255" step="1" value="128" />
-          <span class="val" id="throatVal">128</span>
-        </div>
-      </div>
-      <div>
-        <label class="field">Mouth</label>
-        <div class="slider-row">
-          <input id="mouth" type="range" min="0" max="255" step="1" value="128" />
-          <span class="val" id="mouthVal">128</span>
-        </div>
+      <div class="ctrl">
+        <div class="ctrl-hd"><span>Speed</span><span class="val" id="speedVal">1.00×</span></div>
+        <input id="speed" type="range" min="0.6" max="1.6" step="0.05" value="1.0" />
       </div>
     </div>
   </div>
@@ -413,12 +347,9 @@
   <div class="panel">
     <h2>Effects</h2>
     <div class="fx" id="fxGrid"></div>
-    <div style="margin-top:14px">
-      <label class="field">Reverb wet</label>
-      <div class="slider-row">
-        <input id="reverbAmount" type="range" min="0" max="1" step="0.05" value="0.4" />
-        <span class="val" id="reverbAmountVal">0.40</span>
-      </div>
+    <div class="ctrl" style="margin-top:14px">
+      <div class="ctrl-hd"><span>Reverb wet</span><span class="val" id="reverbAmountVal">0.40</span></div>
+      <input id="reverbAmount" type="range" min="0" max="1" step="0.05" value="0.4" />
     </div>
   </div>
 
@@ -443,14 +374,27 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sam-js@0.3.1/dist/samjs.min.js"></script>
-<script>
+<script type="module">
+import * as tts from "https://cdn.jsdelivr.net/npm/@diffusionstudio/vits-web@1.0.3/dist/vits-web.js";
+
 /* =========================================================================
- * PlugMyTag — client-only build
- * TTS: sam-js (Software Automatic Mouth) → Web Audio FX → WAV download
+ * PlugMyTag — Piper (VITS) + Web Audio FX → WAV
  * ========================================================================= */
 
-const SAM_SAMPLE_RATE = 22050;
+const VOICES = [
+  { id: "en_US-hfc_male-medium",    name: "HFC Male (US) — deep, clean" },
+  { id: "en_US-hfc_female-medium",  name: "HFC Female (US)" },
+  { id: "en_US-ryan-high",          name: "Ryan (US) — warm, natural" },
+  { id: "en_US-ryan-medium",        name: "Ryan (US) medium" },
+  { id: "en_US-lessac-medium",      name: "Lessac (US female)" },
+  { id: "en_US-amy-medium",         name: "Amy (US female)" },
+  { id: "en_US-joe-medium",         name: "Joe (US male)" },
+  { id: "en_US-kusal-medium",       name: "Kusal (US male)" },
+  { id: "en_GB-alan-medium",        name: "Alan (UK) — announcer" },
+  { id: "en_GB-alba-medium",        name: "Alba (UK female)" },
+  { id: "en_GB-southern_english_female-low", name: "Southern English Female" },
+  { id: "en_GB-cori-high",          name: "Cori (UK female) HQ" },
+];
 
 const FX_DEFS = [
   { key: "reverb",      label: "Reverb" },
@@ -463,64 +407,61 @@ const FX_DEFS = [
 ];
 
 const PRESETS = [
-  { id: "classic",   icon: "🎙️", name: "Classic Tag",
-    voice: { speed: 72, pitch: 60, throat: 128, mouth: 128 },
-    reverbAmount: 0.35, fx: { reverb: true, compression: true } },
-  { id: "trap",      icon: "🔥", name: "Trap God",
-    voice: { speed: 80, pitch: 38, throat: 190, mouth: 140 },
-    reverbAmount: 0.55, fx: { reverb: true, distortion: true, compression: true, bass: true } },
-  { id: "demon",     icon: "😈", name: "Demon",
-    voice: { speed: 110, pitch: 22, throat: 220, mouth: 100 },
-    reverbAmount: 0.75, fx: { reverb: true, distortion: true, bass: true } },
-  { id: "chipmunk",  icon: "🐿️", name: "Chipmunk",
-    voice: { speed: 55, pitch: 120, throat: 90, mouth: 200 },
-    reverbAmount: 0.15, fx: { compression: true } },
-  { id: "radio",     icon: "📻", name: "Radio DJ",
-    voice: { speed: 62, pitch: 70, throat: 130, mouth: 130 },
-    reverbAmount: 0.15, fx: { compression: true, highpass: true } },
-  { id: "phone",     icon: "☎️", name: "Telephone",
-    voice: { speed: 72, pitch: 64, throat: 128, mouth: 128 },
-    reverbAmount: 0, fx: { lowpass: true, highpass: true, distortion: true } },
+  { id: "classic", icon: "🎙️", name: "Classic Tag",
+    voice: "en_US-hfc_male-medium", speed: 1.0, reverbAmount: 0.35,
+    fx: { reverb: true, compression: true } },
+  { id: "trap", icon: "🔥", name: "Trap God",
+    voice: "en_US-ryan-high", speed: 0.85, reverbAmount: 0.55,
+    fx: { reverb: true, distortion: true, compression: true, bass: true } },
+  { id: "demon", icon: "😈", name: "Demon",
+    voice: "en_US-ryan-high", speed: 0.7, reverbAmount: 0.75,
+    fx: { reverb: true, distortion: true, bass: true } },
+  { id: "chipmunk", icon: "🐿️", name: "Chipmunk",
+    voice: "en_US-amy-medium", speed: 1.45, reverbAmount: 0.15,
+    fx: { compression: true } },
+  { id: "radio", icon: "📻", name: "Radio DJ",
+    voice: "en_US-hfc_female-medium", speed: 1.02, reverbAmount: 0.15,
+    fx: { compression: true, highpass: true } },
+  { id: "phone", icon: "☎️", name: "Telephone",
+    voice: "en_US-hfc_male-medium", speed: 1.0, reverbAmount: 0,
+    fx: { lowpass: true, highpass: true, distortion: true } },
   { id: "cinematic", icon: "🎬", name: "Cinematic",
-    voice: { speed: 100, pitch: 32, throat: 160, mouth: 110 },
-    reverbAmount: 0.85, fx: { reverb: true, delay: true, bass: true, compression: true } },
-  { id: "stadium",   icon: "📢", name: "Stadium",
-    voice: { speed: 72, pitch: 52, throat: 140, mouth: 140 },
-    reverbAmount: 0.9, fx: { reverb: true, delay: true, bass: true } },
-  { id: "underwater",icon: "🌊", name: "Underwater",
-    voice: { speed: 82, pitch: 45, throat: 128, mouth: 200 },
-    reverbAmount: 0.8, fx: { reverb: true, lowpass: true } },
-  { id: "vinyl",     icon: "💿", name: "Dusty Vinyl",
-    voice: { speed: 72, pitch: 60, throat: 128, mouth: 128 },
-    reverbAmount: 0.3, fx: { reverb: true, distortion: true, lowpass: true, compression: true } },
-  { id: "alien",     icon: "👽", name: "Extraterrestrial",
-    voice: { speed: 100, pitch: 60, throat: 150, mouth: 200 },
-    reverbAmount: 0.45, fx: { reverb: true, delay: true } },
-  { id: "dry",       icon: "🧼", name: "Dry & Clean",
-    voice: { speed: 72, pitch: 64, throat: 128, mouth: 128 },
-    reverbAmount: 0, fx: { compression: true } },
+    voice: "en_US-ryan-high", speed: 0.9, reverbAmount: 0.85,
+    fx: { reverb: true, delay: true, bass: true, compression: true } },
+  { id: "stadium", icon: "📢", name: "Stadium",
+    voice: "en_GB-alan-medium", speed: 0.95, reverbAmount: 0.9,
+    fx: { reverb: true, delay: true, bass: true } },
+  { id: "underwater", icon: "🌊", name: "Underwater",
+    voice: "en_GB-alba-medium", speed: 0.95, reverbAmount: 0.8,
+    fx: { reverb: true, lowpass: true } },
+  { id: "vinyl", icon: "💿", name: "Dusty Vinyl",
+    voice: "en_US-hfc_male-medium", speed: 0.98, reverbAmount: 0.3,
+    fx: { reverb: true, distortion: true, lowpass: true, compression: true } },
+  { id: "british", icon: "🎩", name: "British Announcer",
+    voice: "en_GB-alan-medium", speed: 0.98, reverbAmount: 0.2,
+    fx: { compression: true } },
+  { id: "dry", icon: "🧼", name: "Dry & Clean",
+    voice: "en_US-hfc_male-medium", speed: 1.0, reverbAmount: 0,
+    fx: { compression: true } },
 ];
 
 /* ---------- DOM ---------- */
 const $ = (id) => document.getElementById(id);
-const presetsEl = $("presets");
-const fxGrid    = $("fxGrid");
-const textEl    = $("text");
-const speedEl   = $("speed");
-const pitchEl   = $("pitch");
-const throatEl  = $("throat");
-const mouthEl   = $("mouth");
-const reverbAmt = $("reverbAmount");
-const goBtn     = $("go");
-const errEl     = $("err");
-const statusEl  = $("status");
-const statusTxt = $("statusText");
-const outputEl  = $("output");
-const playerEl  = $("player");
-const dlEl      = $("download");
-const stampEl   = $("stamp");
+const presetsEl = $("presets"), fxGrid = $("fxGrid");
+const voiceSel  = $("voice"), textEl = $("text");
+const speedEl   = $("speed"), reverbAmt = $("reverbAmount");
+const goBtn     = $("go"), errEl = $("err");
+const statusEl  = $("status"), statusTxt = $("statusText");
+const progressBar = $("progressBar"), progressFill = $("progressFill");
+const outputEl  = $("output"), playerEl = $("player");
+const dlEl      = $("download"), stampEl = $("stamp");
 
-/* ---------- UI build ---------- */
+for (const v of VOICES) {
+  const o = document.createElement("option");
+  o.value = v.id; o.textContent = v.name;
+  voiceSel.appendChild(o);
+}
+
 for (const p of PRESETS) {
   const b = document.createElement("button");
   b.type = "button";
@@ -541,15 +482,12 @@ for (const f of FX_DEFS) {
   fxGrid.appendChild(el);
 }
 
-const sliderBind = (el, valEl, fmt) => {
-  const fn = () => valEl.textContent = fmt ? fmt(el.value) : el.value;
+const bindSlider = (el, valEl, fmt) => {
+  const fn = () => valEl.textContent = fmt(el.value);
   el.addEventListener("input", fn); fn();
 };
-sliderBind(speedEl,   $("speedVal"));
-sliderBind(pitchEl,   $("pitchVal"));
-sliderBind(throatEl,  $("throatVal"));
-sliderBind(mouthEl,   $("mouthVal"));
-sliderBind(reverbAmt, $("reverbAmountVal"), (v) => parseFloat(v).toFixed(2));
+bindSlider(speedEl, $("speedVal"), (v) => parseFloat(v).toFixed(2) + "×");
+bindSlider(reverbAmt, $("reverbAmountVal"), (v) => parseFloat(v).toFixed(2));
 
 textEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !goBtn.disabled) generate();
@@ -564,41 +502,64 @@ function clearFx() {
     cb.checked = false; cb.dispatchEvent(new Event("change"));
   }
 }
-
 function applyPreset(p) {
   presetsEl.querySelectorAll(".preset").forEach(el =>
     el.classList.toggle("active", el.dataset.preset === p.id));
   clearFx();
-  speedEl.value  = p.voice.speed;  speedEl.dispatchEvent(new Event("input"));
-  pitchEl.value  = p.voice.pitch;  pitchEl.dispatchEvent(new Event("input"));
-  throatEl.value = p.voice.throat; throatEl.dispatchEvent(new Event("input"));
-  mouthEl.value  = p.voice.mouth;  mouthEl.dispatchEvent(new Event("input"));
+  voiceSel.value = p.voice;
+  speedEl.value  = p.speed;        speedEl.dispatchEvent(new Event("input"));
   reverbAmt.value = p.reverbAmount; reverbAmt.dispatchEvent(new Event("input"));
   for (const f of FX_DEFS) setFx(f.key, p.fx[f.key]);
 }
 
-/* ---------- Boot ---------- */
-function initTTS() {
-  if (typeof SamJs !== "function" && typeof window.SamJs !== "function") {
-    statusTxt.textContent = "Failed to load voice engine";
-    return;
+/* ---------- Status ---------- */
+function setStatus({ text, ready = false, progress = null }) {
+  statusEl.classList.remove("hidden");
+  statusEl.classList.toggle("ready", ready);
+  statusTxt.textContent = text;
+  if (progress !== null) {
+    progressBar.style.display = "block";
+    progressFill.style.width = (progress * 100).toFixed(1) + "%";
+  } else {
+    progressBar.style.display = "none";
   }
-  statusEl.classList.add("ready");
-  statusTxt.textContent = "Ready";
-  setTimeout(() => statusEl.classList.add("hidden"), 500);
-  goBtn.disabled = false;
+}
+function hideStatus() { setTimeout(() => statusEl.classList.add("hidden"), 500); }
+
+/* ---------- Boot: show cached voices, no forced download ---------- */
+(async function boot() {
+  try {
+    const cached = await tts.stored();
+    if (cached && cached.length > 0) {
+      setStatus({ text: `Ready. ${cached.length} voice(s) cached.`, ready: true });
+    } else {
+      setStatus({ text: "Ready. First voice downloads on generate (~20 MB).", ready: true });
+    }
+    hideStatus();
+    goBtn.disabled = false;
+  } catch (e) {
+    setStatus({ text: "Ready.", ready: true });
+    hideStatus();
+    goBtn.disabled = false;
+  }
+})();
+
+/* ---------- Ensure voice model is cached ---------- */
+async function ensureVoice(voiceId) {
+  const cached = await tts.stored();
+  if (cached.includes(voiceId)) return;
+  setStatus({ text: `Downloading voice: ${voiceId}`, progress: 0 });
+  await tts.download(voiceId, (ev) => {
+    if (ev && ev.total) {
+      setStatus({ text: `Downloading voice (${(ev.loaded / 1024 / 1024).toFixed(1)} / ${(ev.total / 1024 / 1024).toFixed(1)} MB)`, progress: ev.loaded / ev.total });
+    }
+  });
+  setStatus({ text: "Voice ready.", ready: true });
+  setTimeout(() => statusEl.classList.add("hidden"), 800);
 }
 
-/* ---------- Synthesize via SAM → Float32Array ---------- */
-function synthesize({ text, speed, pitch, throat, mouth }) {
-  const sam = new SamJs({ speed, pitch, throat, mouth });
-  const buf = sam.buf32(text);
-  if (!buf || !buf.length) throw new Error("SAM returned no audio");
-  return buf;
-}
-
-/* ---------- Reverb impulse ---------- */
-function makeImpulseResponse(ctx, seconds = 2.2, decay = 3.0) {
+/* ---------- FX ---------- */
+function makeImpulseResponse(ctx, seconds = 2.4, decay = 3.0) {
   const len = Math.max(1, Math.floor(ctx.sampleRate * seconds));
   const ir = ctx.createBuffer(2, len, ctx.sampleRate);
   for (let ch = 0; ch < 2; ch++) {
@@ -610,10 +571,8 @@ function makeImpulseResponse(ctx, seconds = 2.2, decay = 3.0) {
   return ir;
 }
 
-/* ---------- Distortion curve (soft clipper) ---------- */
-function makeDistortionCurve(amount = 0.4) {
-  const k = amount * 100;
-  const n = 44100;
+function makeDistortionCurve(amount = 0.35) {
+  const k = amount * 100, n = 44100;
   const curve = new Float32Array(n);
   const deg = Math.PI / 180;
   for (let i = 0; i < n; i++) {
@@ -623,22 +582,26 @@ function makeDistortionCurve(amount = 0.4) {
   return curve;
 }
 
-/* ---------- Render with Web Audio FX chain ---------- */
-async function renderWithEffects(float32, sampleRate, fx) {
-  const extraTail = fx.reverb ? sampleRate * 2.2 :
-                    fx.delay  ? sampleRate * 1.5 :
-                    Math.floor(sampleRate * 0.1);
-  const length = float32.length + extraTail;
+async function decodeWav(blob) {
+  const ab = await blob.arrayBuffer();
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const buf = await ctx.decodeAudioData(ab.slice(0));
+  ctx.close();
+  return buf;
+}
 
-  const offline = new OfflineAudioContext(1, length, sampleRate);
+async function renderWithEffects(inputBuffer, { speed, fx }) {
+  const sr = inputBuffer.sampleRate;
+  const effectiveSamples = Math.ceil(inputBuffer.length / speed);
+  const extraTail = fx.reverb ? sr * 2.4 : fx.delay ? sr * 1.5 : Math.floor(sr * 0.15);
+  const length = effectiveSamples + extraTail;
 
-  const srcBuffer = offline.createBuffer(1, float32.length, sampleRate);
-  srcBuffer.getChannelData(0).set(float32);
+  const offline = new OfflineAudioContext(1, length, sr);
   const src = offline.createBufferSource();
-  src.buffer = srcBuffer;
+  src.buffer = inputBuffer;
+  src.playbackRate.value = speed;
 
   let node = src;
-
   if (fx.highpass) {
     const hp = offline.createBiquadFilter();
     hp.type = "highpass"; hp.frequency.value = 300; hp.Q.value = 0.7;
@@ -656,14 +619,12 @@ async function renderWithEffects(float32, sampleRate, fx) {
   }
   if (fx.distortion) {
     const ws = offline.createWaveShaper();
-    ws.curve = makeDistortionCurve(0.35);
-    ws.oversample = "4x";
+    ws.curve = makeDistortionCurve(0.35); ws.oversample = "4x";
     const trim = offline.createGain(); trim.gain.value = 0.6;
     node.connect(ws); ws.connect(trim); node = trim;
   }
 
   const preFx = node;
-
   const mixBus = offline.createGain(); mixBus.gain.value = 1;
   preFx.connect(mixBus);
 
@@ -674,7 +635,6 @@ async function renderWithEffects(float32, sampleRate, fx) {
     preFx.connect(d); d.connect(fb); fb.connect(d);
     d.connect(wet); wet.connect(mixBus);
   }
-
   if (fx.reverb) {
     const conv = offline.createConvolver();
     conv.buffer = makeImpulseResponse(offline, 2.4, 3.0);
@@ -691,7 +651,7 @@ async function renderWithEffects(float32, sampleRate, fx) {
     tail.connect(comp); tail = comp;
   }
 
-  const makeup = offline.createGain(); makeup.gain.value = 1.35;
+  const makeup = offline.createGain(); makeup.gain.value = 1.3;
   tail.connect(makeup); makeup.connect(offline.destination);
 
   src.start(0);
@@ -700,84 +660,69 @@ async function renderWithEffects(float32, sampleRate, fx) {
 
 /* ---------- AudioBuffer → WAV blob ---------- */
 function audioBufferToWavBlob(buffer) {
-  const numCh = buffer.numberOfChannels;
-  const sr = buffer.sampleRate;
-  const samples = buffer.length;
-  const blockAlign = numCh * 2;
+  const numCh = buffer.numberOfChannels, sr = buffer.sampleRate;
+  const samples = buffer.length, blockAlign = numCh * 2;
   const dataSize = samples * blockAlign;
-
   const ab = new ArrayBuffer(44 + dataSize);
   const view = new DataView(ab);
-  const writeString = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
-
-  writeString(0, "RIFF");
-  view.setUint32(4, 36 + dataSize, true);
-  writeString(8, "WAVE");
-  writeString(12, "fmt ");
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, numCh, true);
-  view.setUint32(24, sr, true);
-  view.setUint32(28, sr * blockAlign, true);
-  view.setUint16(32, blockAlign, true);
-  view.setUint16(34, 16, true);
-  writeString(36, "data");
-  view.setUint32(40, dataSize, true);
-
+  const wstr = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+  wstr(0, "RIFF"); view.setUint32(4, 36 + dataSize, true); wstr(8, "WAVE");
+  wstr(12, "fmt "); view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); view.setUint16(22, numCh, true);
+  view.setUint32(24, sr, true); view.setUint32(28, sr * blockAlign, true);
+  view.setUint16(32, blockAlign, true); view.setUint16(34, 16, true);
+  wstr(36, "data"); view.setUint32(40, dataSize, true);
   const chans = [];
   for (let c = 0; c < numCh; c++) chans.push(buffer.getChannelData(c));
-
-  let offset = 44;
+  let off = 44;
   for (let i = 0; i < samples; i++) {
     for (let c = 0; c < numCh; c++) {
       let s = Math.max(-1, Math.min(1, chans[c][i]));
       s = s < 0 ? s * 0x8000 : s * 0x7FFF;
-      view.setInt16(offset, s, true);
-      offset += 2;
+      view.setInt16(off, s, true); off += 2;
     }
   }
   return new Blob([ab], { type: "audio/wav" });
 }
 
-/* ---------- Pipeline ---------- */
+/* ---------- Generate ---------- */
 async function generate() {
   errEl.classList.remove("show"); errEl.textContent = "";
-  goBtn.disabled = true;
-  goBtn.classList.add("loading");
+  goBtn.disabled = true; goBtn.classList.add("loading");
 
   try {
     const text = textEl.value.trim();
     if (!text) throw new Error("Enter tag text");
-
-    const voice = {
-      text,
-      speed:  parseInt(speedEl.value, 10),
-      pitch:  parseInt(pitchEl.value, 10),
-      throat: parseInt(throatEl.value, 10),
-      mouth:  parseInt(mouthEl.value, 10),
-    };
+    const voiceId = voiceSel.value;
+    const speed = parseFloat(speedEl.value);
     const fx = { reverbAmount: parseFloat(reverbAmt.value) };
     for (const cb of fxGrid.querySelectorAll("input[type=checkbox]")) {
       fx[cb.dataset.fx] = cb.checked;
     }
 
-    const raw = synthesize(voice);
-    const rendered = await renderWithEffects(raw, SAM_SAMPLE_RATE, fx);
-    const blob = audioBufferToWavBlob(rendered);
+    await ensureVoice(voiceId);
 
-    const url = URL.createObjectURL(blob);
+    setStatus({ text: "Synthesizing…" });
+    const wavBlob = await tts.predict({ text, voiceId });
+    const inputBuffer = await decodeWav(wavBlob);
+
+    setStatus({ text: "Applying effects…" });
+    const rendered = await renderWithEffects(inputBuffer, { speed, fx });
+    const outBlob = audioBufferToWavBlob(rendered);
+
+    const url = URL.createObjectURL(outBlob);
     if (playerEl.dataset.url) URL.revokeObjectURL(playerEl.dataset.url);
-    playerEl.src = url;
-    playerEl.dataset.url = url;
-    dlEl.href = url;
-    dlEl.download = `tag-${Date.now()}.wav`;
-    stampEl.textContent = `${(blob.size / 1024).toFixed(1)} KB · ${rendered.duration.toFixed(2)}s`;
+    playerEl.src = url; playerEl.dataset.url = url;
+    dlEl.href = url; dlEl.download = `tag-${Date.now()}.wav`;
+    stampEl.textContent = `${(outBlob.size / 1024).toFixed(1)} KB · ${rendered.duration.toFixed(2)}s`;
     outputEl.classList.add("show");
     playerEl.play().catch(() => {});
+    statusEl.classList.add("hidden");
   } catch (e) {
     errEl.textContent = e.message || "Generation failed";
     errEl.classList.add("show");
     console.error(e);
+    statusEl.classList.add("hidden");
   } finally {
     goBtn.disabled = false;
     goBtn.classList.remove("loading");
@@ -785,9 +730,7 @@ async function generate() {
 }
 
 goBtn.addEventListener("click", generate);
-
 applyPreset(PRESETS[0]);
-initTTS();
 </script>
 </body>
 </html>
