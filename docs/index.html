@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>PlugMyTag Local — Free, Offline Producer Tag Generator</title>
+<meta name="description" content="Free local clone of plugmytag.com. macOS say + ffmpeg. No API keys, no cloud. Run in 30 seconds." />
+<style>
+  :root {
+    --bg: #0a0a12; --panel: #151524; --line: #262640;
+    --text: #ececf6; --muted: #8f90ad;
+    --accent: #ff3d6e; --accent-2: #7c5cff; --accent-3: #31d0aa;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(1100px 600px at 15% -10%, rgba(124,92,255,0.22) 0%, transparent 55%),
+      radial-gradient(900px 500px at 95% 110%, rgba(255,61,110,0.18) 0%, transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 60px 20px 100px; }
+  .hero { text-align: center; margin-bottom: 48px; }
+  .badge {
+    display: inline-block; padding: 6px 12px; border-radius: 999px;
+    background: rgba(124,92,255,0.12); border: 1px solid rgba(124,92,255,0.35);
+    color: #b6aaff; font-size: 12px; font-weight: 500; letter-spacing: 0.04em;
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-size: 56px; margin: 0 0 16px; letter-spacing: -0.02em; font-weight: 700;
+    line-height: 1.05;
+    background: linear-gradient(135deg, #fff 10%, #b6aaff 50%, var(--accent) 90%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .tag { font-size: 19px; color: var(--muted); margin: 0 auto; max-width: 560px; }
+  .cta { display: flex; gap: 12px; justify-content: center; margin-top: 28px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 13px 22px; border-radius: 11px; font-size: 15px; font-weight: 600;
+    text-decoration: none; transition: transform 0.08s, filter 0.15s, border-color 0.15s;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn.primary {
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    color: white; box-shadow: 0 8px 22px rgba(124,92,255,0.28);
+  }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.ghost {
+    background: var(--panel); border: 1px solid var(--line); color: var(--text);
+  }
+  .btn.ghost:hover { border-color: var(--accent-2); }
+
+  section { margin-top: 48px; }
+  h2 {
+    font-size: 13px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.12em; font-weight: 600; margin: 0 0 16px;
+  }
+  .grid {
+    display: grid; gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+  .card {
+    background: linear-gradient(180deg, var(--panel), #1b1b2d);
+    border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px; transition: border-color 0.15s;
+  }
+  .card:hover { border-color: var(--accent-2); }
+  .card .ic { font-size: 22px; margin-bottom: 8px; }
+  .card .t { font-weight: 600; margin-bottom: 4px; font-size: 15px; }
+  .card .d { color: var(--muted); font-size: 13px; }
+
+  pre {
+    background: #07070e; border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 20px; overflow-x: auto; font-size: 13.5px;
+    line-height: 1.65; color: #d4d4e5;
+  }
+  pre code { color: #d4d4e5; }
+  pre .c { color: #6a6b85; }
+  pre .k { color: #ff8fa3; }
+  pre .s { color: #a5e3c6; }
+
+  .flow {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 13px; color: var(--muted);
+    background: #07070e; border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px; white-space: pre; overflow-x: auto;
+  }
+  .flow b { color: var(--text); font-weight: 500; }
+
+  .preset-strip { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill {
+    padding: 8px 14px; border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--line);
+    font-size: 13px; color: var(--text);
+  }
+
+  footer { text-align: center; color: #5e5f78; font-size: 13px; margin-top: 60px; }
+  footer a { color: var(--muted); text-decoration: none; }
+  footer a:hover { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <span class="badge">◆ 100% free · offline · open source</span>
+    <h1>Producer tags,<br/>made locally.</h1>
+    <p class="tag">A free clone of plugmytag.com you run on your own machine. macOS <code>say</code> + ffmpeg. No API keys, no subscriptions, no cloud.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/AUstnnnnnn/plugmytag-local">★ View on GitHub</a>
+      <a class="btn ghost" href="#install">Install →</a>
+    </div>
+  </div>
+
+  <section>
+    <h2>Features</h2>
+    <div class="grid">
+      <div class="card"><div class="ic">🎙️</div><div class="t">100+ voices</div>
+        <div class="d">Every macOS system voice. Alex, Samantha, Fred, plus dozens more.</div></div>
+      <div class="card"><div class="ic">🎛️</div><div class="t">7 effects</div>
+        <div class="d">Reverb, delay, distortion, compression, EQ, bass boost, pitch ±12st.</div></div>
+      <div class="card"><div class="ic">⚡</div><div class="t">11 presets</div>
+        <div class="d">Classic Tag, Trap God, Demon, Radio, Cinematic — tap and go.</div></div>
+      <div class="card"><div class="ic">💾</div><div class="t">WAV + MP3</div>
+        <div class="d">Lossless WAV for DAW import, MP3 for quick sharing.</div></div>
+      <div class="card"><div class="ic">🔒</div><div class="t">No network</div>
+        <div class="d">Runs on localhost. Nothing leaves your machine.</div></div>
+      <div class="card"><div class="ic">🪶</div><div class="t">Zero build</div>
+        <div class="d">Single HTML file + 120-line Flask server. No webpack.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Presets</h2>
+    <div class="preset-strip">
+      <span class="pill">🎙️ Classic Tag</span>
+      <span class="pill">🔥 Trap God</span>
+      <span class="pill">😈 Demon</span>
+      <span class="pill">🐿️ Chipmunk</span>
+      <span class="pill">📻 Radio DJ</span>
+      <span class="pill">☎️ Telephone</span>
+      <span class="pill">🎬 Cinematic</span>
+      <span class="pill">📢 Stadium</span>
+      <span class="pill">🌊 Underwater</span>
+      <span class="pill">💿 Dusty Vinyl</span>
+      <span class="pill">🧼 Dry & Clean</span>
+    </div>
+  </section>
+
+  <section id="install">
+    <h2>Install (30 seconds)</h2>
+<pre><code><span class="c"># requires macOS, Python 3.9+, ffmpeg</span>
+<span class="k">brew</span> install ffmpeg
+<span class="k">git</span> clone https://github.com/AUstnnnnnn/plugmytag-local.git
+<span class="k">cd</span> plugmytag-local
+<span class="k">python3</span> -m venv .venv
+.venv/bin/pip install flask
+.venv/bin/python server.py
+<span class="c"># open http://127.0.0.1:5173</span></code></pre>
+  </section>
+
+  <section>
+    <h2>How it works</h2>
+<div class="flow">text  ─▶  <b>macOS say</b>  ─▶  WAV  ─▶  <b>ffmpeg -af &lt;chain&gt;</b>  ─▶  WAV / MP3
+              ↑                           ↑
+           voice                    reverb · delay
+                                  distortion · EQ
+                                     pitch · rate</div>
+  </section>
+
+  <footer>
+    Built by <a href="https://github.com/AUstnnnnnn">@AUstnnnnnn</a> ·
+    <a href="https://github.com/AUstnnnnnn/plugmytag-local">GitHub</a> ·
+    MIT licensed
+  </footer>
+</div>
+</body>
+</html>
