@@ -3,180 +3,791 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>PlugMyTag Local — Free, Offline Producer Tag Generator</title>
-<meta name="description" content="Free local clone of plugmytag.com. macOS say + ffmpeg. No API keys, no cloud. Run in 30 seconds." />
+<title>PlugMyTag — Free Producer Tag Generator</title>
+<meta name="description" content="Free producer-tag generator. Runs entirely in your browser. No API keys, no cloud, no signup." />
+<meta name="theme-color" content="#0a0a12" />
+<meta property="og:title" content="PlugMyTag — Free Producer Tag Generator" />
+<meta property="og:description" content="Free producer tag generator. Runs in your browser." />
+<meta property="og:type" content="website" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ff3d6e'/%3E%3Cpath d='M12 10l10 6-10 6z' fill='white'/%3E%3C/svg%3E" />
 <style>
   :root {
-    --bg: #0a0a12; --panel: #151524; --line: #262640;
-    --text: #ececf6; --muted: #8f90ad;
-    --accent: #ff3d6e; --accent-2: #7c5cff; --accent-3: #31d0aa;
+    --bg: #09090f;
+    --bg-2: #0e0e18;
+    --panel: #121220;
+    --panel-2: #171728;
+    --panel-3: #1c1c30;
+    --line: #23233a;
+    --line-2: #2e2e46;
+    --text: #f0f0f7;
+    --muted: #8a8ba3;
+    --muted-2: #5a5b74;
+    --accent: #ff3d6e;
+    --accent-2: #7c5cff;
+    --accent-3: #31d0aa;
+    --danger: #ff7a8a;
+    --radius: 14px;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
   }
+
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
     min-height: 100vh;
     background:
-      radial-gradient(1100px 600px at 15% -10%, rgba(124,92,255,0.22) 0%, transparent 55%),
-      radial-gradient(900px 500px at 95% 110%, rgba(255,61,110,0.18) 0%, transparent 55%),
+      radial-gradient(1100px 560px at 15% -10%, rgba(124,92,255,0.18) 0%, transparent 55%),
+      radial-gradient(900px 500px at 95% 110%, rgba(255,61,110,0.14) 0%, transparent 55%),
       var(--bg);
     color: var(--text);
-    font: 16px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, "Inter", "Segoe UI", sans-serif;
+    font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    display: flex; justify-content: center;
+    padding: 40px 16px 80px;
   }
-  .wrap { max-width: 820px; margin: 0 auto; padding: 60px 20px 100px; }
-  .hero { text-align: center; margin-bottom: 48px; }
-  .badge {
-    display: inline-block; padding: 6px 12px; border-radius: 999px;
-    background: rgba(124,92,255,0.12); border: 1px solid rgba(124,92,255,0.35);
-    color: #b6aaff; font-size: 12px; font-weight: 500; letter-spacing: 0.04em;
-    margin-bottom: 20px;
+  .app { width: 100%; max-width: 720px; }
+  ::selection { background: rgba(124,92,255,0.35); color: var(--text); }
+
+  /* Header */
+  .head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .logo {
+    width: 34px; height: 34px; border-radius: 10px; position: relative;
+    background: conic-gradient(from 210deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent));
+    flex-shrink: 0;
+  }
+  .logo::after {
+    content: ""; position: absolute; inset: 4px; border-radius: 7px; background: var(--bg);
+  }
+  .logo::before {
+    content: ""; position: absolute; inset: 0;
+    background: conic-gradient(from 210deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent));
+    filter: blur(10px); opacity: 0.5; border-radius: 10px; z-index: -1;
   }
   h1 {
-    font-size: 56px; margin: 0 0 16px; letter-spacing: -0.02em; font-weight: 700;
-    line-height: 1.05;
-    background: linear-gradient(135deg, #fff 10%, #b6aaff 50%, var(--accent) 90%);
+    font-size: 24px; margin: 0; letter-spacing: -0.018em; font-weight: 600;
+    background: linear-gradient(180deg, #fff 20%, #c5bffc 140%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .tag { font-size: 19px; color: var(--muted); margin: 0 auto; max-width: 560px; }
-  .cta { display: flex; gap: 12px; justify-content: center; margin-top: 28px; flex-wrap: wrap; }
-  .btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 13px 22px; border-radius: 11px; font-size: 15px; font-weight: 600;
-    text-decoration: none; transition: transform 0.08s, filter 0.15s, border-color 0.15s;
-  }
-  .btn:active { transform: translateY(1px); }
-  .btn.primary {
-    background: linear-gradient(90deg, var(--accent), var(--accent-2));
-    color: white; box-shadow: 0 8px 22px rgba(124,92,255,0.28);
-  }
-  .btn.primary:hover { filter: brightness(1.08); }
-  .btn.ghost {
-    background: var(--panel); border: 1px solid var(--line); color: var(--text);
-  }
-  .btn.ghost:hover { border-color: var(--accent-2); }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 26px 46px; letter-spacing: -0.005em; }
 
-  section { margin-top: 48px; }
-  h2 {
-    font-size: 13px; color: var(--muted); text-transform: uppercase;
-    letter-spacing: 0.12em; font-weight: 600; margin: 0 0 16px;
+  /* Panels */
+  .panel {
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px; margin-bottom: 12px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.035) inset,
+      0 12px 32px -12px rgba(0,0,0,0.5);
   }
-  .grid {
-    display: grid; gap: 14px;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  .panel h2 {
+    margin: 0 0 12px; font-size: 10px; font-weight: 600;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em;
   }
-  .card {
-    background: linear-gradient(180deg, var(--panel), #1b1b2d);
-    border: 1px solid var(--line); border-radius: 14px;
-    padding: 18px; transition: border-color 0.15s;
-  }
-  .card:hover { border-color: var(--accent-2); }
-  .card .ic { font-size: 22px; margin-bottom: 8px; }
-  .card .t { font-weight: 600; margin-bottom: 4px; font-size: 15px; }
-  .card .d { color: var(--muted); font-size: 13px; }
 
-  pre {
-    background: #07070e; border: 1px solid var(--line); border-radius: 12px;
-    padding: 18px 20px; overflow-x: auto; font-size: 13.5px;
-    line-height: 1.65; color: #d4d4e5;
+  /* Presets */
+  .presets {
+    display: flex; gap: 6px; overflow-x: auto;
+    scrollbar-width: thin; scrollbar-color: var(--line-2) transparent;
+    padding: 4px; margin: -4px;
   }
-  pre code { color: #d4d4e5; }
-  pre .c { color: #6a6b85; }
-  pre .k { color: #ff8fa3; }
-  pre .s { color: #a5e3c6; }
+  .presets::-webkit-scrollbar { height: 5px; }
+  .presets::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 3px; }
 
-  .flow {
+  .preset {
+    flex: 0 0 auto; padding: 8px 13px; border-radius: 999px;
+    background: var(--panel-3); border: 1px solid var(--line);
+    color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer;
+    white-space: nowrap; font-family: inherit;
+    transition: transform 160ms var(--ease-out),
+                background 160ms var(--ease-out),
+                border-color 160ms var(--ease-out),
+                color 160ms var(--ease-out);
+    opacity: 0; transform: translateY(6px);
+    animation: stagger-in 320ms var(--ease-out) forwards;
+  }
+  .preset:active { transform: scale(0.97); }
+  .preset.active {
+    background: linear-gradient(135deg, rgba(255,61,110,0.22), rgba(124,92,255,0.22));
+    border-color: rgba(255,61,110,0.6);
+    color: #fff;
+  }
+  .preset .ico { margin-right: 5px; filter: saturate(1.1); }
+
+  @keyframes stagger-in {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .preset:nth-child(1)  { animation-delay: 0ms; }
+  .preset:nth-child(2)  { animation-delay: 30ms; }
+  .preset:nth-child(3)  { animation-delay: 60ms; }
+  .preset:nth-child(4)  { animation-delay: 90ms; }
+  .preset:nth-child(5)  { animation-delay: 120ms; }
+  .preset:nth-child(6)  { animation-delay: 150ms; }
+  .preset:nth-child(7)  { animation-delay: 180ms; }
+  .preset:nth-child(8)  { animation-delay: 210ms; }
+  .preset:nth-child(9)  { animation-delay: 240ms; }
+  .preset:nth-child(10) { animation-delay: 270ms; }
+  .preset:nth-child(11) { animation-delay: 300ms; }
+  .preset:nth-child(12) { animation-delay: 330ms; }
+
+  /* Fields */
+  label.field {
+    display: block; font-size: 10px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 7px; font-weight: 600;
+  }
+  input[type=text], select {
+    width: 100%; background: #0a0a14; color: var(--text);
+    border: 1px solid var(--line); border-radius: 10px;
+    padding: 11px 14px; font-size: 14.5px; outline: none;
+    font-family: inherit;
+    transition: border-color 180ms var(--ease-out),
+                background 180ms var(--ease-out);
+  }
+  input[type=text]:hover, select:hover { border-color: var(--line-2); }
+  input[type=text]:focus, select:focus {
+    border-color: var(--accent-2); background: #0c0c18;
+  }
+  select {
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%238a8ba3' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+  .row { display: grid; gap: 10px; }
+  .row.two { grid-template-columns: 1fr 1fr; }
+  .row.four { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  @media (max-width: 520px) { .row.four { grid-template-columns: 1fr 1fr; } }
+
+  /* Effect toggles */
+  .fx {
+    display: grid; gap: 7px;
+    grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  }
+  .fx-item {
+    display: flex; align-items: center; gap: 9px;
+    background: #0b0b15; border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px 12px; cursor: pointer;
+    user-select: none; font-size: 14px;
+    transition: border-color 180ms var(--ease-out),
+                background 180ms var(--ease-out),
+                transform 140ms var(--ease-out);
+    position: relative; overflow: hidden;
+  }
+  .fx-item:active { transform: scale(0.98); }
+  @media (hover: hover) and (pointer: fine) {
+    .fx-item:hover { border-color: var(--line-2); }
+  }
+  .fx-item input { display: none; }
+  .fx-item.on {
+    border-color: rgba(255,61,110,0.55);
+    background: linear-gradient(135deg, rgba(255,61,110,0.08), rgba(124,92,255,0.05));
+  }
+  .fx-item .dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--muted-2);
+    transition: background 200ms var(--ease-out),
+                box-shadow 200ms var(--ease-out);
+  }
+  .fx-item.on .dot {
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent), 0 0 2px var(--accent);
+  }
+  .fx-item .lbl { transition: color 200ms var(--ease-out); }
+  .fx-item.on .lbl { color: #fff; }
+
+  /* Sliders */
+  .slider-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .slider-row .val {
+    color: var(--muted); min-width: 40px; text-align: right;
+    font-variant-numeric: tabular-nums; font-size: 12px;
     font-family: ui-monospace, "SF Mono", Menlo, monospace;
-    font-size: 13px; color: var(--muted);
-    background: #07070e; border: 1px solid var(--line); border-radius: 12px;
-    padding: 20px; white-space: pre; overflow-x: auto;
   }
-  .flow b { color: var(--text); font-weight: 500; }
+  input[type=range] {
+    flex: 1; -webkit-appearance: none; appearance: none;
+    background: transparent; height: 24px; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-runnable-track { height: 4px; background: var(--line); border-radius: 2px; }
+  input[type=range]::-moz-range-track { height: 4px; background: var(--line); border-radius: 2px; border: 0; }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #fff; border: 0; margin-top: -5px;
+    box-shadow: 0 0 0 1px var(--line-2), 0 4px 10px rgba(0,0,0,0.35);
+    transition: transform 140ms var(--ease-out);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 0;
+    box-shadow: 0 0 0 1px var(--line-2), 0 4px 10px rgba(0,0,0,0.35);
+  }
+  input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.15); }
+  input[type=range]:active::-webkit-slider-thumb { transform: scale(1.25); }
 
-  .preset-strip { display: flex; gap: 8px; flex-wrap: wrap; }
-  .pill {
-    padding: 8px 14px; border-radius: 999px;
-    background: var(--panel); border: 1px solid var(--line);
-    font-size: 13px; color: var(--text);
+  /* Generate button */
+  button.primary {
+    width: 100%; padding: 14px 18px; border: 0; border-radius: 12px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    color: white; font-weight: 600; font-size: 15px; cursor: pointer;
+    letter-spacing: -0.005em; font-family: inherit;
+    transition: transform 140ms var(--ease-out),
+                filter 180ms var(--ease-out);
+    box-shadow: 0 8px 22px -4px rgba(124,92,255,0.35),
+                0 1px 0 rgba(255,255,255,0.15) inset;
+    position: relative; overflow: hidden;
+  }
+  button.primary:hover { filter: brightness(1.08); }
+  button.primary:active { transform: scale(0.98); }
+  button.primary:disabled { cursor: progress; filter: brightness(0.85); }
+
+  button.primary .btn-content {
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: filter 200ms var(--ease-out), opacity 200ms var(--ease-out);
+  }
+  button.primary.loading .btn-content {
+    filter: blur(3px); opacity: 0.5;
+  }
+  button.primary.loading::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+    animation: shimmer 1.2s var(--ease-in-out) infinite;
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
   }
 
-  footer { text-align: center; color: #5e5f78; font-size: 13px; margin-top: 60px; }
-  footer a { color: var(--muted); text-decoration: none; }
-  footer a:hover { color: var(--text); }
+  /* Output */
+  .output {
+    overflow: hidden; max-height: 0; opacity: 0; margin-top: 0;
+    transition: max-height 360ms var(--ease-out),
+                opacity 260ms var(--ease-out),
+                margin-top 360ms var(--ease-out);
+  }
+  .output.show { max-height: 240px; opacity: 1; margin-top: 14px; }
+  audio {
+    width: 100%; margin: 0 0 10px; border-radius: 10px;
+    filter: invert(0.94) hue-rotate(180deg) contrast(0.95);
+  }
+  .out-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .dl {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 13px; border-radius: 10px;
+    background: var(--panel-3); border: 1px solid var(--line); color: var(--text);
+    text-decoration: none; font-size: 13px; font-weight: 500;
+    transition: transform 140ms var(--ease-out),
+                border-color 180ms var(--ease-out);
+    cursor: pointer; font-family: inherit;
+  }
+  .dl:hover { border-color: var(--accent-2); }
+  .dl:active { transform: scale(0.97); }
+  .dl.primary-dl {
+    background: linear-gradient(135deg, rgba(255,61,110,0.18), rgba(124,92,255,0.18));
+    border-color: rgba(255,61,110,0.5);
+  }
+  .hint {
+    color: var(--muted); font-size: 12px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  /* Status banner */
+  .status {
+    display: flex; align-items: center; gap: 10px;
+    color: var(--muted); font-size: 13px; padding: 10px 14px;
+    background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 10px; margin-bottom: 12px; overflow: hidden;
+    transition: opacity 240ms var(--ease-out),
+                transform 240ms var(--ease-out),
+                max-height 320ms var(--ease-out),
+                margin-bottom 320ms var(--ease-out),
+                padding 320ms var(--ease-out),
+                border-width 320ms var(--ease-out);
+    max-height: 48px;
+  }
+  .status.hidden {
+    opacity: 0; transform: translateY(-4px); pointer-events: none;
+    max-height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0;
+    border-top-width: 0; border-bottom-width: 0;
+  }
+  .status .spinner {
+    width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+    border: 2px solid var(--line-2); border-top-color: var(--accent);
+    animation: spin 0.7s linear infinite;
+  }
+  .status.ready .spinner {
+    border: 0; background: var(--accent-3); animation: none;
+    box-shadow: 0 0 8px var(--accent-3);
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Error */
+  .err {
+    color: var(--danger); font-size: 13px; margin-top: 10px;
+    background: rgba(255,122,138,0.08);
+    border: 1px solid rgba(255,122,138,0.25);
+    padding: 10px 12px; border-radius: 8px;
+    display: none;
+  }
+  .err.show { display: block; }
+
+  /* Footer */
+  .footer { text-align: center; color: var(--muted-2); font-size: 12px; margin-top: 28px; }
+  .footer a { color: var(--muted); text-decoration: none;
+              transition: color 180ms var(--ease); }
+  .footer a:hover { color: var(--text); }
+  kbd {
+    background: var(--panel-3); border: 1px solid var(--line);
+    padding: 1px 5px; border-radius: 4px;
+    font-family: ui-monospace, monospace; font-size: 11px; color: var(--muted);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+    .preset { opacity: 1; transform: none; }
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="hero">
-    <span class="badge">◆ 100% free · offline · open source</span>
-    <h1>Producer tags,<br/>made locally.</h1>
-    <p class="tag">A free clone of plugmytag.com you run on your own machine. macOS <code>say</code> + ffmpeg. No API keys, no subscriptions, no cloud.</p>
-    <div class="cta">
-      <a class="btn primary" href="https://github.com/AUstnnnnnn/plugmytag-local">★ View on GitHub</a>
-      <a class="btn ghost" href="#install">Install →</a>
+<div class="app">
+  <div class="head">
+    <div class="logo"></div>
+    <h1>PlugMyTag</h1>
+  </div>
+  <div class="sub">Free producer-tag generator. Runs entirely in your browser.</div>
+
+  <div class="status" id="status">
+    <span class="spinner"></span>
+    <span id="statusText">Loading voice engine…</span>
+  </div>
+
+  <div class="panel">
+    <h2>Presets</h2>
+    <div class="presets" id="presets"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Your Tag</h2>
+    <label class="field" for="text">Tag text</label>
+    <input id="text" type="text" placeholder="Prod by YourName" value="Prod by Austn" maxlength="120" />
+  </div>
+
+  <div class="panel">
+    <h2>Voice</h2>
+    <div class="row four">
+      <div>
+        <label class="field">Speed</label>
+        <div class="slider-row">
+          <input id="speed" type="range" min="20" max="200" step="1" value="72" />
+          <span class="val" id="speedVal">72</span>
+        </div>
+      </div>
+      <div>
+        <label class="field">Pitch</label>
+        <div class="slider-row">
+          <input id="pitch" type="range" min="0" max="255" step="1" value="64" />
+          <span class="val" id="pitchVal">64</span>
+        </div>
+      </div>
+      <div>
+        <label class="field">Throat</label>
+        <div class="slider-row">
+          <input id="throat" type="range" min="0" max="255" step="1" value="128" />
+          <span class="val" id="throatVal">128</span>
+        </div>
+      </div>
+      <div>
+        <label class="field">Mouth</label>
+        <div class="slider-row">
+          <input id="mouth" type="range" min="0" max="255" step="1" value="128" />
+          <span class="val" id="mouthVal">128</span>
+        </div>
+      </div>
     </div>
   </div>
 
-  <section>
-    <h2>Features</h2>
-    <div class="grid">
-      <div class="card"><div class="ic">🎙️</div><div class="t">100+ voices</div>
-        <div class="d">Every macOS system voice. Alex, Samantha, Fred, plus dozens more.</div></div>
-      <div class="card"><div class="ic">🎛️</div><div class="t">7 effects</div>
-        <div class="d">Reverb, delay, distortion, compression, EQ, bass boost, pitch ±12st.</div></div>
-      <div class="card"><div class="ic">⚡</div><div class="t">11 presets</div>
-        <div class="d">Classic Tag, Trap God, Demon, Radio, Cinematic — tap and go.</div></div>
-      <div class="card"><div class="ic">💾</div><div class="t">WAV + MP3</div>
-        <div class="d">Lossless WAV for DAW import, MP3 for quick sharing.</div></div>
-      <div class="card"><div class="ic">🔒</div><div class="t">No network</div>
-        <div class="d">Runs on localhost. Nothing leaves your machine.</div></div>
-      <div class="card"><div class="ic">🪶</div><div class="t">Zero build</div>
-        <div class="d">Single HTML file + 120-line Flask server. No webpack.</div></div>
+  <div class="panel">
+    <h2>Effects</h2>
+    <div class="fx" id="fxGrid"></div>
+    <div style="margin-top:14px">
+      <label class="field">Reverb wet</label>
+      <div class="slider-row">
+        <input id="reverbAmount" type="range" min="0" max="1" step="0.05" value="0.4" />
+        <span class="val" id="reverbAmountVal">0.40</span>
+      </div>
     </div>
-  </section>
+  </div>
 
-  <section>
-    <h2>Presets</h2>
-    <div class="preset-strip">
-      <span class="pill">🎙️ Classic Tag</span>
-      <span class="pill">🔥 Trap God</span>
-      <span class="pill">😈 Demon</span>
-      <span class="pill">🐿️ Chipmunk</span>
-      <span class="pill">📻 Radio DJ</span>
-      <span class="pill">☎️ Telephone</span>
-      <span class="pill">🎬 Cinematic</span>
-      <span class="pill">📢 Stadium</span>
-      <span class="pill">🌊 Underwater</span>
-      <span class="pill">💿 Dusty Vinyl</span>
-      <span class="pill">🧼 Dry & Clean</span>
+  <div class="panel">
+    <button id="go" class="primary" disabled>
+      <span class="btn-content">Generate Tag</span>
+    </button>
+    <div id="err" class="err"></div>
+    <div id="output" class="output">
+      <audio id="player" controls></audio>
+      <div class="out-meta">
+        <a id="download" class="dl primary-dl" download>↓ Download WAV</a>
+        <span class="hint" id="stamp"></span>
+      </div>
     </div>
-  </section>
+  </div>
 
-  <section id="install">
-    <h2>Install (30 seconds)</h2>
-<pre><code><span class="c"># requires macOS, Python 3.9+, ffmpeg</span>
-<span class="k">brew</span> install ffmpeg
-<span class="k">git</span> clone https://github.com/AUstnnnnnn/plugmytag-local.git
-<span class="k">cd</span> plugmytag-local
-<span class="k">python3</span> -m venv .venv
-.venv/bin/pip install flask
-.venv/bin/python server.py
-<span class="c"># open http://127.0.0.1:5173</span></code></pre>
-  </section>
-
-  <section>
-    <h2>How it works</h2>
-<div class="flow">text  ─▶  <b>macOS say</b>  ─▶  WAV  ─▶  <b>ffmpeg -af &lt;chain&gt;</b>  ─▶  WAV / MP3
-              ↑                           ↑
-           voice                    reverb · delay
-                                  distortion · EQ
-                                     pitch · rate</div>
-  </section>
-
-  <footer>
-    Built by <a href="https://github.com/AUstnnnnnn">@AUstnnnnnn</a> ·
-    <a href="https://github.com/AUstnnnnnn/plugmytag-local">GitHub</a> ·
-    MIT licensed
-  </footer>
+  <div class="footer">
+    Press <kbd>Enter</kbd> to generate ·
+    <a href="https://github.com/AUstnnnnnn/plugmytag-local" target="_blank" rel="noopener">github</a> ·
+    MIT
+  </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sam-js@0.3.1/dist/samjs.min.js"></script>
+<script>
+/* =========================================================================
+ * PlugMyTag — client-only build
+ * TTS: sam-js (Software Automatic Mouth) → Web Audio FX → WAV download
+ * ========================================================================= */
+
+const SAM_SAMPLE_RATE = 22050;
+
+const FX_DEFS = [
+  { key: "reverb",      label: "Reverb" },
+  { key: "delay",       label: "Delay" },
+  { key: "distortion",  label: "Distortion" },
+  { key: "compression", label: "Compression" },
+  { key: "lowpass",     label: "Low-pass" },
+  { key: "highpass",    label: "High-pass" },
+  { key: "bass",        label: "Bass boost" },
+];
+
+const PRESETS = [
+  { id: "classic",   icon: "🎙️", name: "Classic Tag",
+    voice: { speed: 72, pitch: 60, throat: 128, mouth: 128 },
+    reverbAmount: 0.35, fx: { reverb: true, compression: true } },
+  { id: "trap",      icon: "🔥", name: "Trap God",
+    voice: { speed: 80, pitch: 38, throat: 190, mouth: 140 },
+    reverbAmount: 0.55, fx: { reverb: true, distortion: true, compression: true, bass: true } },
+  { id: "demon",     icon: "😈", name: "Demon",
+    voice: { speed: 110, pitch: 22, throat: 220, mouth: 100 },
+    reverbAmount: 0.75, fx: { reverb: true, distortion: true, bass: true } },
+  { id: "chipmunk",  icon: "🐿️", name: "Chipmunk",
+    voice: { speed: 55, pitch: 120, throat: 90, mouth: 200 },
+    reverbAmount: 0.15, fx: { compression: true } },
+  { id: "radio",     icon: "📻", name: "Radio DJ",
+    voice: { speed: 62, pitch: 70, throat: 130, mouth: 130 },
+    reverbAmount: 0.15, fx: { compression: true, highpass: true } },
+  { id: "phone",     icon: "☎️", name: "Telephone",
+    voice: { speed: 72, pitch: 64, throat: 128, mouth: 128 },
+    reverbAmount: 0, fx: { lowpass: true, highpass: true, distortion: true } },
+  { id: "cinematic", icon: "🎬", name: "Cinematic",
+    voice: { speed: 100, pitch: 32, throat: 160, mouth: 110 },
+    reverbAmount: 0.85, fx: { reverb: true, delay: true, bass: true, compression: true } },
+  { id: "stadium",   icon: "📢", name: "Stadium",
+    voice: { speed: 72, pitch: 52, throat: 140, mouth: 140 },
+    reverbAmount: 0.9, fx: { reverb: true, delay: true, bass: true } },
+  { id: "underwater",icon: "🌊", name: "Underwater",
+    voice: { speed: 82, pitch: 45, throat: 128, mouth: 200 },
+    reverbAmount: 0.8, fx: { reverb: true, lowpass: true } },
+  { id: "vinyl",     icon: "💿", name: "Dusty Vinyl",
+    voice: { speed: 72, pitch: 60, throat: 128, mouth: 128 },
+    reverbAmount: 0.3, fx: { reverb: true, distortion: true, lowpass: true, compression: true } },
+  { id: "alien",     icon: "👽", name: "Extraterrestrial",
+    voice: { speed: 100, pitch: 60, throat: 150, mouth: 200 },
+    reverbAmount: 0.45, fx: { reverb: true, delay: true } },
+  { id: "dry",       icon: "🧼", name: "Dry & Clean",
+    voice: { speed: 72, pitch: 64, throat: 128, mouth: 128 },
+    reverbAmount: 0, fx: { compression: true } },
+];
+
+/* ---------- DOM ---------- */
+const $ = (id) => document.getElementById(id);
+const presetsEl = $("presets");
+const fxGrid    = $("fxGrid");
+const textEl    = $("text");
+const speedEl   = $("speed");
+const pitchEl   = $("pitch");
+const throatEl  = $("throat");
+const mouthEl   = $("mouth");
+const reverbAmt = $("reverbAmount");
+const goBtn     = $("go");
+const errEl     = $("err");
+const statusEl  = $("status");
+const statusTxt = $("statusText");
+const outputEl  = $("output");
+const playerEl  = $("player");
+const dlEl      = $("download");
+const stampEl   = $("stamp");
+
+/* ---------- UI build ---------- */
+for (const p of PRESETS) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "preset"; b.dataset.preset = p.id;
+  b.innerHTML = `<span class="ico">${p.icon}</span>${p.name}`;
+  b.onclick = () => applyPreset(p);
+  presetsEl.appendChild(b);
+}
+
+for (const f of FX_DEFS) {
+  const el = document.createElement("label");
+  el.className = "fx-item"; el.dataset.fx = f.key;
+  el.innerHTML = `<span class="dot"></span>
+                  <input type="checkbox" data-fx="${f.key}"/>
+                  <span class="lbl">${f.label}</span>`;
+  const cb = el.querySelector("input");
+  cb.addEventListener("change", () => el.classList.toggle("on", cb.checked));
+  fxGrid.appendChild(el);
+}
+
+const sliderBind = (el, valEl, fmt) => {
+  const fn = () => valEl.textContent = fmt ? fmt(el.value) : el.value;
+  el.addEventListener("input", fn); fn();
+};
+sliderBind(speedEl,   $("speedVal"));
+sliderBind(pitchEl,   $("pitchVal"));
+sliderBind(throatEl,  $("throatVal"));
+sliderBind(mouthEl,   $("mouthVal"));
+sliderBind(reverbAmt, $("reverbAmountVal"), (v) => parseFloat(v).toFixed(2));
+
+textEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !goBtn.disabled) generate();
+});
+
+function setFx(key, on) {
+  const cb = fxGrid.querySelector(`input[data-fx="${key}"]`);
+  if (cb) { cb.checked = !!on; cb.dispatchEvent(new Event("change")); }
+}
+function clearFx() {
+  for (const cb of fxGrid.querySelectorAll("input[type=checkbox]")) {
+    cb.checked = false; cb.dispatchEvent(new Event("change"));
+  }
+}
+
+function applyPreset(p) {
+  presetsEl.querySelectorAll(".preset").forEach(el =>
+    el.classList.toggle("active", el.dataset.preset === p.id));
+  clearFx();
+  speedEl.value  = p.voice.speed;  speedEl.dispatchEvent(new Event("input"));
+  pitchEl.value  = p.voice.pitch;  pitchEl.dispatchEvent(new Event("input"));
+  throatEl.value = p.voice.throat; throatEl.dispatchEvent(new Event("input"));
+  mouthEl.value  = p.voice.mouth;  mouthEl.dispatchEvent(new Event("input"));
+  reverbAmt.value = p.reverbAmount; reverbAmt.dispatchEvent(new Event("input"));
+  for (const f of FX_DEFS) setFx(f.key, p.fx[f.key]);
+}
+
+/* ---------- Boot ---------- */
+function initTTS() {
+  if (typeof SamJs !== "function" && typeof window.SamJs !== "function") {
+    statusTxt.textContent = "Failed to load voice engine";
+    return;
+  }
+  statusEl.classList.add("ready");
+  statusTxt.textContent = "Ready";
+  setTimeout(() => statusEl.classList.add("hidden"), 500);
+  goBtn.disabled = false;
+}
+
+/* ---------- Synthesize via SAM → Float32Array ---------- */
+function synthesize({ text, speed, pitch, throat, mouth }) {
+  const sam = new SamJs({ speed, pitch, throat, mouth });
+  const buf = sam.buf32(text);
+  if (!buf || !buf.length) throw new Error("SAM returned no audio");
+  return buf;
+}
+
+/* ---------- Reverb impulse ---------- */
+function makeImpulseResponse(ctx, seconds = 2.2, decay = 3.0) {
+  const len = Math.max(1, Math.floor(ctx.sampleRate * seconds));
+  const ir = ctx.createBuffer(2, len, ctx.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const data = ir.getChannelData(ch);
+    for (let i = 0; i < len; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+    }
+  }
+  return ir;
+}
+
+/* ---------- Distortion curve (soft clipper) ---------- */
+function makeDistortionCurve(amount = 0.4) {
+  const k = amount * 100;
+  const n = 44100;
+  const curve = new Float32Array(n);
+  const deg = Math.PI / 180;
+  for (let i = 0; i < n; i++) {
+    const x = (i * 2) / n - 1;
+    curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+  }
+  return curve;
+}
+
+/* ---------- Render with Web Audio FX chain ---------- */
+async function renderWithEffects(float32, sampleRate, fx) {
+  const extraTail = fx.reverb ? sampleRate * 2.2 :
+                    fx.delay  ? sampleRate * 1.5 :
+                    Math.floor(sampleRate * 0.1);
+  const length = float32.length + extraTail;
+
+  const offline = new OfflineAudioContext(1, length, sampleRate);
+
+  const srcBuffer = offline.createBuffer(1, float32.length, sampleRate);
+  srcBuffer.getChannelData(0).set(float32);
+  const src = offline.createBufferSource();
+  src.buffer = srcBuffer;
+
+  let node = src;
+
+  if (fx.highpass) {
+    const hp = offline.createBiquadFilter();
+    hp.type = "highpass"; hp.frequency.value = 300; hp.Q.value = 0.7;
+    node.connect(hp); node = hp;
+  }
+  if (fx.lowpass) {
+    const lp = offline.createBiquadFilter();
+    lp.type = "lowpass"; lp.frequency.value = 3000; lp.Q.value = 0.7;
+    node.connect(lp); node = lp;
+  }
+  if (fx.bass) {
+    const bs = offline.createBiquadFilter();
+    bs.type = "lowshelf"; bs.frequency.value = 200; bs.gain.value = 8;
+    node.connect(bs); node = bs;
+  }
+  if (fx.distortion) {
+    const ws = offline.createWaveShaper();
+    ws.curve = makeDistortionCurve(0.35);
+    ws.oversample = "4x";
+    const trim = offline.createGain(); trim.gain.value = 0.6;
+    node.connect(ws); ws.connect(trim); node = trim;
+  }
+
+  const preFx = node;
+
+  const mixBus = offline.createGain(); mixBus.gain.value = 1;
+  preFx.connect(mixBus);
+
+  if (fx.delay) {
+    const d = offline.createDelay(1.5); d.delayTime.value = 0.28;
+    const fb = offline.createGain(); fb.gain.value = 0.4;
+    const wet = offline.createGain(); wet.gain.value = 0.45;
+    preFx.connect(d); d.connect(fb); fb.connect(d);
+    d.connect(wet); wet.connect(mixBus);
+  }
+
+  if (fx.reverb) {
+    const conv = offline.createConvolver();
+    conv.buffer = makeImpulseResponse(offline, 2.4, 3.0);
+    const wet = offline.createGain();
+    wet.gain.value = Math.max(0, Math.min(1.2, fx.reverbAmount ?? 0.5));
+    preFx.connect(conv); conv.connect(wet); wet.connect(mixBus);
+  }
+
+  let tail = mixBus;
+  if (fx.compression) {
+    const comp = offline.createDynamicsCompressor();
+    comp.threshold.value = -20; comp.knee.value = 20;
+    comp.ratio.value = 4; comp.attack.value = 0.005; comp.release.value = 0.08;
+    tail.connect(comp); tail = comp;
+  }
+
+  const makeup = offline.createGain(); makeup.gain.value = 1.35;
+  tail.connect(makeup); makeup.connect(offline.destination);
+
+  src.start(0);
+  return await offline.startRendering();
+}
+
+/* ---------- AudioBuffer → WAV blob ---------- */
+function audioBufferToWavBlob(buffer) {
+  const numCh = buffer.numberOfChannels;
+  const sr = buffer.sampleRate;
+  const samples = buffer.length;
+  const blockAlign = numCh * 2;
+  const dataSize = samples * blockAlign;
+
+  const ab = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(ab);
+  const writeString = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+
+  writeString(0, "RIFF");
+  view.setUint32(4, 36 + dataSize, true);
+  writeString(8, "WAVE");
+  writeString(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numCh, true);
+  view.setUint32(24, sr, true);
+  view.setUint32(28, sr * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, 16, true);
+  writeString(36, "data");
+  view.setUint32(40, dataSize, true);
+
+  const chans = [];
+  for (let c = 0; c < numCh; c++) chans.push(buffer.getChannelData(c));
+
+  let offset = 44;
+  for (let i = 0; i < samples; i++) {
+    for (let c = 0; c < numCh; c++) {
+      let s = Math.max(-1, Math.min(1, chans[c][i]));
+      s = s < 0 ? s * 0x8000 : s * 0x7FFF;
+      view.setInt16(offset, s, true);
+      offset += 2;
+    }
+  }
+  return new Blob([ab], { type: "audio/wav" });
+}
+
+/* ---------- Pipeline ---------- */
+async function generate() {
+  errEl.classList.remove("show"); errEl.textContent = "";
+  goBtn.disabled = true;
+  goBtn.classList.add("loading");
+
+  try {
+    const text = textEl.value.trim();
+    if (!text) throw new Error("Enter tag text");
+
+    const voice = {
+      text,
+      speed:  parseInt(speedEl.value, 10),
+      pitch:  parseInt(pitchEl.value, 10),
+      throat: parseInt(throatEl.value, 10),
+      mouth:  parseInt(mouthEl.value, 10),
+    };
+    const fx = { reverbAmount: parseFloat(reverbAmt.value) };
+    for (const cb of fxGrid.querySelectorAll("input[type=checkbox]")) {
+      fx[cb.dataset.fx] = cb.checked;
+    }
+
+    const raw = synthesize(voice);
+    const rendered = await renderWithEffects(raw, SAM_SAMPLE_RATE, fx);
+    const blob = audioBufferToWavBlob(rendered);
+
+    const url = URL.createObjectURL(blob);
+    if (playerEl.dataset.url) URL.revokeObjectURL(playerEl.dataset.url);
+    playerEl.src = url;
+    playerEl.dataset.url = url;
+    dlEl.href = url;
+    dlEl.download = `tag-${Date.now()}.wav`;
+    stampEl.textContent = `${(blob.size / 1024).toFixed(1)} KB · ${rendered.duration.toFixed(2)}s`;
+    outputEl.classList.add("show");
+    playerEl.play().catch(() => {});
+  } catch (e) {
+    errEl.textContent = e.message || "Generation failed";
+    errEl.classList.add("show");
+    console.error(e);
+  } finally {
+    goBtn.disabled = false;
+    goBtn.classList.remove("loading");
+  }
+}
+
+goBtn.addEventListener("click", generate);
+
+applyPreset(PRESETS[0]);
+initTTS();
+</script>
 </body>
 </html>

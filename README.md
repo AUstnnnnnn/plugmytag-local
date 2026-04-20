@@ -1,84 +1,68 @@
-# PlugMyTag — Local
+# PlugMyTag
 
-Free, offline producer-tag generator. Local clone of [plugmytag.com](https://www.plugmytag.com). No API keys, no cloud, no subscriptions. Uses the built-in macOS `say` engine for TTS and `ffmpeg` for effects.
+Free producer-tag generator. Runs **entirely in your browser** — no server, no API keys, no cloud. Inspired by [plugmytag.com](https://www.plugmytag.com).
 
 <p align="center">
-  <a href="https://austnnnnnn.github.io/plugmytag-local/">Landing page</a> ·
-  <a href="#quickstart">Quickstart</a> ·
-  <a href="#presets">Presets</a> ·
-  <a href="#how-it-works">How it works</a>
+  <a href="https://austnnnnnn.github.io/plugmytag-local/"><b>→ Live app</b></a>
 </p>
 
-## Features
+## What it does
 
-- 100+ voices (every macOS system voice)
-- 11 presets — Classic Tag, Trap God, Demon, Chipmunk, Radio DJ, Telephone, Cinematic, Stadium, Underwater, Dusty Vinyl, Dry & Clean
-- Effects: reverb, delay, distortion, compression, low-pass, high-pass, bass boost, pitch (±12 semitones), rate (0.5–1.5×)
-- WAV (lossless) and MP3 export
-- Single-page UI — no build step
-- Runs entirely on localhost — no network, no telemetry
+Type a tag (`"Prod by YourName"`), pick a preset, hit generate. Get a styled WAV download. All synthesis and effects run client-side via Web Audio API.
 
-## Quickstart
+## Stack
 
-Requires macOS (for `say`), Python 3.9+, and ffmpeg.
+| Layer | Tool |
+|---|---|
+| TTS | [sam-js](https://github.com/discordier/sam) — Software Automatic Mouth (~20KB) |
+| Effects | Web Audio API — Convolver, Delay, WaveShaper, DynamicsCompressor, Biquad |
+| Render | `OfflineAudioContext` → `AudioBuffer` → WAV encoder |
+| Hosting | Static single file on GitHub Pages |
 
-```bash
-brew install ffmpeg
-git clone https://github.com/AUstnnnnnn/plugmytag-local.git
-cd plugmytag-local
-python3 -m venv .venv
-.venv/bin/pip install flask
-.venv/bin/python server.py
-```
-
-Open <http://127.0.0.1:5173>.
+No build step. One HTML file. Loads sam-js from jsDelivr.
 
 ## Presets
 
-| Preset | Vibe |
-|---|---|
-| Classic Tag | Clean producer drop with light reverb |
-| Trap God | Pitched-down, distorted, heavy reverb |
-| Demon | Extreme pitch-down, gritty |
-| Chipmunk | High-pitched, sped-up |
-| Radio DJ | Compressed, radio-ready |
-| Telephone | Band-pass, lo-fi |
-| Cinematic | Deep, delayed, trailer-style |
-| Stadium | Huge reverb + delay |
-| Underwater | Low-pass with long reverb |
-| Dusty Vinyl | Slight crunch, warm rolloff |
-| Dry & Clean | No effects, raw voice |
+🎙️ Classic Tag · 🔥 Trap God · 😈 Demon · 🐿️ Chipmunk · 📻 Radio DJ · ☎️ Telephone · 🎬 Cinematic · 📢 Stadium · 🌊 Underwater · 💿 Dusty Vinyl · 👽 Extraterrestrial · 🧼 Dry & Clean
 
-## How it works
+Each preset dials in speed/pitch/throat/mouth at the TTS layer, plus an FX chain (reverb/delay/distortion/compression/EQ/bass).
 
+## Voice character
+
+SAM has four synthesis knobs:
+- **Speed** — higher is slower (default 72)
+- **Pitch** — higher is higher (default 64)
+- **Throat** — formant 1 (default 128)
+- **Mouth** — formant 2 (default 128)
+
+Classic voices from the SAM manual:
+| Voice | Speed | Pitch | Throat | Mouth |
+|---|---|---|---|---|
+| Default | 72 | 64 | 128 | 128 |
+| Elf | 72 | 64 | 110 | 160 |
+| Little Robot | 92 | 60 | 190 | 190 |
+| Extraterrestrial | 100 | 64 | 150 | 200 |
+
+## Run locally
+
+```bash
+git clone https://github.com/AUstnnnnnn/plugmytag-local.git
+cd plugmytag-local/docs
+python3 -m http.server 8000
+# open http://localhost:8000
 ```
-text  ─▶  macOS `say`  ─▶  WAV  ─▶  ffmpeg -af <chain>  ─▶  WAV/MP3
-              ↑                             ↑
-           voice                     reverb / delay /
-                                   distortion / EQ / pitch
-```
 
-- **Backend** (`server.py`): Flask, ~120 lines. Three routes: `/`, `/voices`, `/generate`.
-- **Frontend** (`index.html`): single file, zero deps. Preset configs inline.
+That's it. Any static server works.
 
-Effect mapping in `build_filter()`:
-- Pitch → `asetrate=44100*<ratio>,aresample=44100,atempo=<1/ratio>`
-- Reverb → `aecho=0.8:0.9:40|80|120:...`
-- Delay → `aecho=0.8:0.88:300:0.5`
-- Distortion → `acrusher=...bits=8:mode=log`
-- Compression → `acompressor=threshold=-18dB:ratio=4`
-- Bass → `bass=g=6`
-- Low/high-pass → `lowpass=f=3000`, `highpass=f=200`
+## Why SAM and not a modern AI voice?
 
-## Why
+- **Zero model download** — SAM is 20KB of JS, not 50MB of weights
+- **Instant boot** — no WASM warmup, no model load
+- **Aesthetic fit** — retro robot voice pairs well with crunchy, pitched-down tag effects
+- **Fully offline** after first load
 
-plugmytag.com charges $9.99–$19.99 for what amounts to TTS + ffmpeg. macOS ships both for free.
-
-## Limitations
-
-- macOS only (depends on `say`). Linux port: swap `say` for [piper](https://github.com/rhasspy/piper) or `espeak-ng`.
-- Voice quality is the stock Apple TTS — good, not AI-generated. For higher realism, swap the TTS step for a local model like [Piper](https://github.com/rhasspy/piper) or [Coqui XTTS](https://github.com/coqui-ai/TTS).
+For higher-quality voices, swap `sam-js` for [Piper WASM](https://github.com/wide-video/piper-wasm) (~30MB per voice) or a server-side engine.
 
 ## License
 
-MIT
+MIT for this repo. sam-js is reverse-engineered from 1980s SoftVoice SAM (abandonware status — see [sam-js license notes](https://github.com/discordier/sam#license)).
