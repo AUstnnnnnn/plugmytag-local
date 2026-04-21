@@ -812,7 +812,7 @@ engineToggle.querySelectorAll("button").forEach(b => {
   b.addEventListener("click", () => {
     if (b.dataset.engine === engine) return;
     if (b.dataset.engine === "mac" && !macAvailable) {
-      errEl.textContent = "Mac mode needs local server. Run: python3 server.py";
+      errEl.innerHTML = 'Mac mode needs local server. <a href="https://raw.githubusercontent.com/AUstnnnnnn/plugmytag-local/main/server.py" download="server.py" style="color:var(--led-amber);text-decoration:underline">Download server.py</a> + <a href="https://raw.githubusercontent.com/AUstnnnnnn/plugmytag-local/main/requirements.txt" download="requirements.txt" style="color:var(--led-amber);text-decoration:underline">requirements.txt</a>, then: <code>pip install -r requirements.txt && python3 server.py</code> — open http://localhost:5173';
       errEl.classList.add("show");
       return;
     }
