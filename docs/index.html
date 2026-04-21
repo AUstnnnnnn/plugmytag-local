@@ -3,401 +3,641 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>PlugMyTag — Free Producer Tag Generator</title>
-<meta name="description" content="Free producer-tag generator. Runs entirely in your browser. Neural voice via Piper. No API keys." />
-<meta name="theme-color" content="#0a0a12" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ff3d6e'/%3E%3Cpath d='M12 10l10 6-10 6z' fill='white'/%3E%3C/svg%3E" />
+<title>TagKit — Producer Tag Synthesizer</title>
+<meta name="description" content="Producer-tag synthesizer. Runs in your browser or via local macOS server. Studio-rack FX." />
+<meta name="theme-color" content="#1a1d22" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231a1d22'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ffae00' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%23ffae00'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700;800&family=Inter:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #09090f; --bg-2: #0e0e18;
-    --panel: #121220; --panel-2: #171728; --panel-3: #1c1c30;
-    --line: #23233a; --line-2: #2e2e46;
-    --text: #f0f0f7; --muted: #8a8ba3; --muted-2: #5a5b74;
-    --accent: #ff3d6e; --accent-2: #7c5cff; --accent-3: #31d0aa;
-    --danger: #ff7a8a; --radius: 14px;
-    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --chassis: #1a1d22;
+    --chassis-dark: #0a0b0d;
+    --plate-1: #3a3d44;
+    --plate-2: #23262c;
+    --plate-lo: #15171b;
+    --label: #d4d7dd;
+    --label-muted: #7c8088;
+    --label-hi: rgba(255,255,255,0.08);
+    --label-shadow: rgba(0,0,0,0.7);
+    --led-amber: #ffae00;
+    --led-red: #ff3a2e;
+    --led-green: #32d74b;
+    --led-off: #1e2024;
+    --lcd-bg: #061307;
+    --lcd-text: #7bfb7b;
+    --lcd-dim: #2a6a2a;
+    --radius: 10px;
     --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
     min-height: 100vh;
     background:
-      radial-gradient(1100px 560px at 15% -10%, rgba(124,92,255,0.18) 0%, transparent 55%),
-      radial-gradient(900px 500px at 95% 110%, rgba(255,61,110,0.14) 0%, transparent 55%),
-      var(--bg);
-    color: var(--text);
-    font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, "Inter", "Segoe UI", sans-serif;
+      radial-gradient(ellipse 800px 500px at 50% 0%, #1f2228 0%, #0a0b0d 60%),
+      #000;
+    color: var(--label);
+    font: 14px/1.4 "Inter", ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     display: flex; justify-content: center;
-    padding: 40px 16px 80px;
+    padding: 32px 12px 64px;
   }
-  .app { width: 100%; max-width: 720px; }
-  ::selection { background: rgba(124,92,255,0.35); color: var(--text); }
+  .app { width: 100%; max-width: 760px; }
 
-  .head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
-  .logo {
-    width: 34px; height: 34px; border-radius: 10px; position: relative; flex-shrink: 0;
-    background: conic-gradient(from 210deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent));
+  .chassis {
+    background:
+      linear-gradient(180deg, #242830 0%, #14161a 100%),
+      var(--chassis);
+    border: 1px solid #000;
+    border-radius: 14px;
+    padding: 38px 20px 20px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.08) inset,
+      0 0 0 1px rgba(255,255,255,0.02) inset,
+      0 30px 60px -10px rgba(0,0,0,0.8),
+      0 10px 30px -5px rgba(0,0,0,0.5);
+    position: relative;
   }
-  .logo::after { content: ""; position: absolute; inset: 4px; border-radius: 7px; background: var(--bg); }
-  .logo::before {
-    content: ""; position: absolute; inset: 0;
-    background: conic-gradient(from 210deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent));
-    filter: blur(10px); opacity: 0.5; border-radius: 10px; z-index: -1;
+  .screw {
+    position: absolute; width: 14px; height: 14px; border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 35%, #b8bbc0 0%, #72757a 40%, #24262a 100%);
+    box-shadow:
+      inset 0 0 0 1px rgba(0,0,0,0.6),
+      0 1px 2px rgba(0,0,0,0.6);
   }
-  h1 {
-    font-size: 24px; margin: 0; letter-spacing: -0.018em; font-weight: 600;
-    background: linear-gradient(180deg, #fff 20%, #c5bffc 140%);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
+  .screw::after {
+    content: ""; position: absolute; inset: 3px;
+    background: linear-gradient(42deg, transparent 46%, rgba(0,0,0,0.7) 46%, rgba(0,0,0,0.7) 54%, transparent 54%);
+    border-radius: 50%;
   }
-  .sub { color: var(--muted); font-size: 13px; margin: 0 0 26px 46px; }
+  .screw.tl { top: 10px; left: 10px; }
+  .screw.tr { top: 10px; right: 10px; }
+  .screw.bl { bottom: 10px; left: 10px; }
+  .screw.br { bottom: 10px; right: 10px; }
 
-  .panel {
-    background: linear-gradient(180deg, var(--panel), var(--panel-2));
-    border: 1px solid var(--line); border-radius: var(--radius);
-    padding: 16px; margin-bottom: 12px;
-    box-shadow: 0 1px 0 rgba(255,255,255,0.035) inset, 0 12px 32px -12px rgba(0,0,0,0.5);
+  .brand {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px 18px;
+    border-bottom: 1px solid rgba(0,0,0,0.6);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.05);
+    margin-bottom: 16px;
   }
-  .panel h2 {
-    margin: 0 0 12px; font-size: 10px; font-weight: 600;
-    color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em;
+  .brand-mark {
+    font: 800 24px/1 var(--mono);
+    letter-spacing: 0.2em;
+    color: var(--label);
+    text-shadow:
+      0 1px 0 rgba(255,255,255,0.1),
+      0 -1px 0 rgba(0,0,0,0.7),
+      0 0 20px rgba(255,174,0,0.08);
+  }
+  .brand-mark .k {
+    color: var(--led-amber);
+    text-shadow: 0 0 10px var(--led-amber), 0 0 20px rgba(255,174,0,0.4);
+  }
+  .brand-meta {
+    font: 600 9px/1 var(--mono);
+    color: var(--label-muted);
+    letter-spacing: 0.2em; text-transform: uppercase;
+    text-shadow: 0 1px 0 var(--label-hi);
   }
 
-  .presets {
-    display: flex; gap: 6px; overflow-x: auto;
-    scrollbar-width: thin; scrollbar-color: var(--line-2) transparent;
-    padding: 4px; margin: -4px;
+  .module {
+    background: linear-gradient(180deg, var(--plate-1) 0%, var(--plate-2) 100%);
+    border-radius: var(--radius);
+    padding: 16px 18px 18px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(0,0,0,0.6);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.07) inset,
+      0 -1px 0 rgba(0,0,0,0.3) inset,
+      0 2px 4px rgba(0,0,0,0.3);
+    position: relative;
   }
-  .presets::-webkit-scrollbar { height: 5px; }
-  .presets::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 3px; }
-  .preset {
-    flex: 0 0 auto; padding: 8px 13px; border-radius: 999px;
-    background: var(--panel-3); border: 1px solid var(--line);
-    color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer;
-    white-space: nowrap; font-family: inherit;
-    transition: transform 160ms var(--ease-out), background 160ms var(--ease-out),
-                border-color 160ms var(--ease-out), color 160ms var(--ease-out);
-    opacity: 0; transform: translateY(6px);
-    animation: stagger-in 320ms var(--ease-out) forwards;
+  .module-label {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    font: 700 9px/1 var(--mono);
+    letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--label-muted);
+    margin-bottom: 12px;
+    text-shadow: 0 1px 0 var(--label-hi), 0 -1px 0 var(--label-shadow);
   }
-  .preset:active { transform: scale(0.97); }
-  .preset.active {
-    background: linear-gradient(135deg, rgba(255,61,110,0.22), rgba(124,92,255,0.22));
-    border-color: rgba(255,61,110,0.6); color: #fff;
-  }
-  .preset .ico { margin-right: 5px; }
-  @keyframes stagger-in { to { opacity: 1; transform: translateY(0); } }
-  .preset:nth-child(1)  { animation-delay: 0ms; }
-  .preset:nth-child(2)  { animation-delay: 30ms; }
-  .preset:nth-child(3)  { animation-delay: 60ms; }
-  .preset:nth-child(4)  { animation-delay: 90ms; }
-  .preset:nth-child(5)  { animation-delay: 120ms; }
-  .preset:nth-child(6)  { animation-delay: 150ms; }
-  .preset:nth-child(7)  { animation-delay: 180ms; }
-  .preset:nth-child(8)  { animation-delay: 210ms; }
-  .preset:nth-child(9)  { animation-delay: 240ms; }
-  .preset:nth-child(10) { animation-delay: 270ms; }
-  .preset:nth-child(11) { animation-delay: 300ms; }
-  .preset:nth-child(12) { animation-delay: 330ms; }
 
-  label.field {
-    display: block; font-size: 10px; color: var(--muted);
-    text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 7px; font-weight: 600;
+  /* Status strip */
+  .status-strip {
+    display: flex; align-items: center; gap: 16px;
+    padding: 10px 14px; margin-bottom: 10px;
+    background: linear-gradient(180deg, #0a0b0d 0%, #15171b 100%);
+    border: 1px solid rgba(0,0,0,0.7);
+    border-radius: 8px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.05) inset,
+      0 2px 4px rgba(0,0,0,0.3) inset;
   }
-  input[type=text], select {
-    width: 100%; background: #0a0a14; color: var(--text);
-    border: 1px solid var(--line); border-radius: 10px;
-    padding: 11px 14px; font-size: 14.5px; outline: none; font-family: inherit;
-    transition: border-color 180ms var(--ease-out), background 180ms var(--ease-out);
+  .led-row { display: flex; gap: 14px; }
+  .led-item { display: flex; align-items: center; gap: 6px; }
+  .led {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--led-off);
+    box-shadow: inset 0 0 2px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.06);
+    transition: all 180ms var(--ease);
+    flex-shrink: 0;
   }
-  input[type=text]:hover, select:hover { border-color: var(--line-2); }
-  input[type=text]:focus, select:focus { border-color: var(--accent-2); background: #0c0c18; }
-  select {
-    appearance: none; -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%238a8ba3' stroke-width='1.5'/%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+  .led.green.on {
+    background: var(--led-green);
+    box-shadow: 0 0 6px var(--led-green), 0 0 12px rgba(50,215,75,0.5);
   }
-  .row { display: grid; gap: 12px; }
-  .row.two { grid-template-columns: 1fr 1fr; }
+  .led.amber.on {
+    background: var(--led-amber);
+    box-shadow: 0 0 6px var(--led-amber), 0 0 12px rgba(255,174,0,0.5);
+  }
+  .led.red.on {
+    background: var(--led-red);
+    box-shadow: 0 0 6px var(--led-red), 0 0 12px rgba(255,58,46,0.5);
+    animation: pulse 1s infinite;
+  }
+  .led-lbl {
+    font: 700 9px/1 var(--mono);
+    color: var(--label-muted);
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  @keyframes pulse { 50% { opacity: 0.55; } }
 
-  /* Control = label+val inline, slider below */
-  .ctrl { display: flex; flex-direction: column; gap: 6px; }
-  .ctrl-hd {
-    display: flex; justify-content: space-between; align-items: baseline;
-    font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
-    text-transform: uppercase; color: var(--muted);
+  .progress-bar {
+    flex: 1; height: 3px; background: rgba(0,0,0,0.6);
+    border-radius: 2px; overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
   }
-  .ctrl-hd .val {
-    color: var(--text); font-size: 12px; letter-spacing: 0; font-weight: 500;
-    font-family: ui-monospace, "SF Mono", Menlo, monospace;
-    font-variant-numeric: tabular-nums; text-transform: none;
+  .progress-fill {
+    height: 100%; background: var(--led-amber);
+    box-shadow: 0 0 6px var(--led-amber);
+    width: 0%; transition: width 200ms var(--ease);
   }
-  .ctrl input[type=range] { width: 100%; }
+  .status-text {
+    margin-left: auto;
+    font: 600 10px/1 var(--mono);
+    color: var(--lcd-text);
+    text-shadow: 0 0 5px var(--lcd-text);
+    letter-spacing: 0.12em; text-transform: uppercase;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 280px;
+  }
 
-  /* Effects */
-  .fx {
-    display: grid; gap: 7px;
-    grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
-  }
-  .fx-item {
-    display: flex; align-items: center; gap: 9px;
-    background: #0b0b15; border: 1px solid var(--line);
-    border-radius: 10px; padding: 10px 12px; cursor: pointer;
-    user-select: none; font-size: 14px; position: relative; overflow: hidden;
-    transition: border-color 180ms var(--ease-out), background 180ms var(--ease-out),
-                transform 140ms var(--ease-out);
-  }
-  .fx-item:active { transform: scale(0.98); }
-  @media (hover: hover) and (pointer: fine) {
-    .fx-item:hover { border-color: var(--line-2); }
-  }
-  .fx-item input { display: none; }
-  .fx-item.on {
-    border-color: rgba(255,61,110,0.55);
-    background: linear-gradient(135deg, rgba(255,61,110,0.08), rgba(124,92,255,0.05));
-  }
-  .fx-item .dot {
-    width: 7px; height: 7px; border-radius: 50%; background: var(--muted-2);
-    transition: background 200ms var(--ease-out), box-shadow 200ms var(--ease-out);
-  }
-  .fx-item.on .dot { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
-  .fx-item .lbl { transition: color 200ms var(--ease-out); }
-  .fx-item.on .lbl { color: #fff; }
-
-  /* Range */
-  input[type=range] {
-    -webkit-appearance: none; appearance: none;
-    background: transparent; height: 22px; cursor: pointer;
-  }
-  input[type=range]::-webkit-slider-runnable-track { height: 4px; background: var(--line); border-radius: 2px; }
-  input[type=range]::-moz-range-track { height: 4px; background: var(--line); border-radius: 2px; border: 0; }
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none; appearance: none;
-    width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 0; margin-top: -5px;
-    box-shadow: 0 0 0 1px var(--line-2), 0 4px 10px rgba(0,0,0,0.35);
-    transition: transform 140ms var(--ease-out);
-  }
-  input[type=range]::-moz-range-thumb {
-    width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 0;
-    box-shadow: 0 0 0 1px var(--line-2), 0 4px 10px rgba(0,0,0,0.35);
-  }
-  input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.15); }
-  input[type=range]:active::-webkit-slider-thumb { transform: scale(1.25); }
-
-  /* Primary button */
-  button.primary {
-    width: 100%; padding: 14px 18px; border: 0; border-radius: 12px;
-    background: linear-gradient(90deg, var(--accent), var(--accent-2));
-    color: white; font-weight: 600; font-size: 15px; cursor: pointer; font-family: inherit;
-    transition: transform 140ms var(--ease-out), filter 180ms var(--ease-out);
-    box-shadow: 0 8px 22px -4px rgba(124,92,255,0.35), 0 1px 0 rgba(255,255,255,0.15) inset;
+  /* LCD input */
+  .lcd-field {
+    background: linear-gradient(180deg, var(--lcd-bg) 0%, #0d2511 100%);
+    border: 1px solid #000;
+    border-radius: 6px;
+    padding: 14px 16px;
+    box-shadow:
+      inset 0 2px 6px rgba(0,0,0,0.9),
+      inset 0 -1px 0 rgba(255,255,255,0.04),
+      0 1px 0 rgba(255,255,255,0.06);
     position: relative; overflow: hidden;
   }
-  button.primary:hover { filter: brightness(1.08); }
-  button.primary:active { transform: scale(0.98); }
-  button.primary:disabled { cursor: progress; filter: brightness(0.85); }
-  button.primary .btn-content {
-    display: inline-flex; align-items: center; gap: 8px;
-    transition: filter 200ms var(--ease-out), opacity 200ms var(--ease-out);
+  .lcd-field::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(0deg,
+      rgba(0,0,0,0.22) 0px, rgba(0,0,0,0.22) 1px,
+      transparent 1px, transparent 3px);
   }
-  button.primary.loading .btn-content { filter: blur(3px); opacity: 0.5; }
-  button.primary.loading::after {
-    content: ""; position: absolute; inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
-    animation: shimmer 1.2s var(--ease-in-out) infinite;
+  .lcd-field::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.3) 100%);
   }
-  @keyframes shimmer {
-    0% { transform: translateX(-100%); } 100% { transform: translateX(100%); }
+  .lcd-field input {
+    width: 100%; background: transparent; border: 0; outline: none;
+    color: var(--lcd-text);
+    font: 500 16px/1 var(--mono);
+    letter-spacing: 0.05em;
+    text-shadow: 0 0 6px var(--lcd-text), 0 0 10px rgba(123,251,123,0.4);
+    caret-color: var(--lcd-text);
+    position: relative; z-index: 1;
   }
+  .lcd-field input::placeholder { color: var(--lcd-dim); text-shadow: none; }
+
+  /* Engine toggle */
+  .engine-toggle {
+    display: inline-flex; padding: 3px;
+    background: linear-gradient(180deg, #0a0b0d, #1a1c20);
+    border: 1px solid #000;
+    border-radius: 6px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.7);
+  }
+  .engine-toggle button {
+    padding: 6px 12px; border: 0; border-radius: 4px;
+    background: transparent; color: var(--label-muted);
+    font: 700 9px/1 var(--mono);
+    letter-spacing: 0.16em; text-transform: uppercase;
+    cursor: pointer; font-family: var(--mono);
+    transition: all 160ms var(--ease);
+  }
+  .engine-toggle button:hover:not(:disabled) { color: var(--label); }
+  .engine-toggle button.active {
+    background: linear-gradient(180deg, #484c55, #2a2d33);
+    color: var(--led-amber);
+    text-shadow: 0 0 6px var(--led-amber);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.1) inset,
+      0 -1px 0 rgba(0,0,0,0.4) inset,
+      0 2px 3px rgba(0,0,0,0.4);
+  }
+  .engine-toggle button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* Voice row: select + knobs */
+  .voice-row {
+    display: grid; gap: 18px;
+    grid-template-columns: 2fr 1fr 1fr;
+    align-items: end;
+  }
+  .select-wrap label {
+    display: block;
+    font: 700 9px/1 var(--mono);
+    color: var(--label-muted);
+    letter-spacing: 0.18em; text-transform: uppercase;
+    margin-bottom: 8px;
+    text-shadow: 0 1px 0 var(--label-hi);
+  }
+  select {
+    width: 100%;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M1 3l4 4 4-4' fill='none' stroke='%237bfb7b' stroke-width='1.5'/%3E%3C/svg%3E") right 10px center / 10px no-repeat,
+      linear-gradient(180deg, var(--lcd-bg) 0%, #0d2511 100%);
+    color: var(--lcd-text);
+    font: 500 12px/1 var(--mono);
+    letter-spacing: 0.04em;
+    border: 1px solid #000; border-radius: 6px;
+    padding: 10px 30px 10px 12px;
+    appearance: none; -webkit-appearance: none;
+    text-shadow: 0 0 5px var(--lcd-text);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+    cursor: pointer; outline: none;
+    font-family: var(--mono);
+  }
+  select option { background: #0d2511; color: var(--lcd-text); }
+
+  /* Knobs */
+  .knob { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .knob-label {
+    font: 700 9px/1 var(--mono);
+    color: var(--label-muted);
+    letter-spacing: 0.2em; text-transform: uppercase;
+    text-shadow: 0 1px 0 var(--label-hi);
+  }
+  .knob-dial {
+    --angle: -135deg;
+    width: 58px; height: 58px; border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 35%, #6a6e76 0%, #2a2d33 60%, #15171b 100%);
+    box-shadow:
+      inset 0 2px 3px rgba(255,255,255,0.12),
+      inset 0 -2px 4px rgba(0,0,0,0.6),
+      0 3px 6px rgba(0,0,0,0.6),
+      0 1px 0 rgba(255,255,255,0.06);
+    position: relative;
+    transform: rotate(var(--angle));
+    transition: transform 80ms linear;
+    cursor: ns-resize;
+    flex-shrink: 0;
+  }
+  .knob-dial::before {
+    content: ""; position: absolute; inset: 11px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 30%, #3a3d44 0%, #1a1c20 100%);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.7);
+  }
+  .knob-dial::after {
+    content: ""; position: absolute;
+    top: 5px; left: 50%;
+    transform: translateX(-50%);
+    width: 3px; height: 11px; border-radius: 2px;
+    background: var(--led-amber);
+    box-shadow: 0 0 5px var(--led-amber), 0 0 10px rgba(255,174,0,0.5);
+  }
+  .knob-val {
+    font: 500 10px/1 var(--mono);
+    color: var(--lcd-text);
+    text-shadow: 0 0 4px var(--lcd-text);
+    background: var(--lcd-bg);
+    padding: 4px 8px; border-radius: 3px;
+    border: 1px solid #000;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.7);
+    letter-spacing: 0.04em;
+    min-width: 50px; text-align: center;
+  }
+
+  /* Reverb row — horizontal knob */
+  .reverb-row {
+    margin-top: 16px;
+    display: flex; align-items: center; gap: 14px;
+    padding: 10px 14px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(0,0,0,0.4);
+    border-radius: 6px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+  }
+  .reverb-row .knob-dial { width: 44px; height: 44px; }
+  .reverb-row .knob-dial::before { inset: 8px; }
+  .reverb-row .knob-dial::after { top: 4px; height: 8px; }
+  .reverb-row-txt { display: flex; flex-direction: column; gap: 4px; }
+
+  /* FX rockers */
+  .fx-grid {
+    display: grid; gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+  .fx-rocker {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: linear-gradient(180deg, #343740, #1e2026);
+    border: 1px solid #000;
+    border-radius: 6px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.07) inset,
+      0 -1px 0 rgba(0,0,0,0.5) inset,
+      0 2px 3px rgba(0,0,0,0.3);
+    cursor: pointer; user-select: none;
+    transition: all 120ms var(--ease);
+  }
+  .fx-rocker:active {
+    box-shadow:
+      0 -1px 0 rgba(255,255,255,0.04) inset,
+      0 2px 6px rgba(0,0,0,0.5) inset;
+    transform: translateY(1px);
+  }
+  .fx-rocker input { display: none; }
+  .fx-rocker .led { width: 9px; height: 9px; }
+  .fx-rocker.on .led {
+    background: var(--led-red);
+    box-shadow: 0 0 6px var(--led-red), 0 0 12px rgba(255,58,46,0.5);
+  }
+  .fx-rocker .lbl {
+    font: 700 10px/1 var(--mono);
+    color: var(--label-muted);
+    letter-spacing: 0.12em; text-transform: uppercase;
+    text-shadow: 0 1px 0 var(--label-hi);
+  }
+  .fx-rocker.on .lbl { color: var(--label); }
+
+  /* Presets — pad row */
+  .presets {
+    display: flex; gap: 8px; overflow-x: auto; padding: 2px;
+    scrollbar-width: thin;
+    scrollbar-color: #3a3d44 transparent;
+  }
+  .presets::-webkit-scrollbar { height: 4px; }
+  .presets::-webkit-scrollbar-thumb { background: #3a3d44; border-radius: 2px; }
+  .preset {
+    flex: 0 0 auto;
+    padding: 10px 14px;
+    background: linear-gradient(180deg, #3c3f47, #1e2024);
+    border: 1px solid #000;
+    border-radius: 6px;
+    font: 700 10px/1 var(--mono);
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--label-muted);
+    cursor: pointer; white-space: nowrap;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.08) inset,
+      0 -1px 0 rgba(0,0,0,0.5) inset,
+      0 2px 3px rgba(0,0,0,0.4);
+    transition: all 140ms var(--ease);
+    font-family: var(--mono);
+  }
+  .preset:hover { color: var(--label); }
+  .preset:active { transform: translateY(1px); }
+  .preset.active {
+    color: var(--led-amber);
+    text-shadow: 0 0 6px var(--led-amber);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.1) inset,
+      0 0 0 1px rgba(255,174,0,0.35) inset,
+      0 0 12px rgba(255,174,0,0.2),
+      0 2px 3px rgba(0,0,0,0.4);
+  }
+  .preset .ico { margin-right: 5px; font-size: 12px; }
+
+  /* Engage button */
+  .engage {
+    width: 100%; padding: 18px;
+    background: linear-gradient(180deg, #c42a30 0%, #7a1214 100%);
+    color: #fff;
+    font: 800 13px/1 var(--mono);
+    letter-spacing: 0.32em; text-transform: uppercase;
+    border: 1px solid #000;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow:
+      0 2px 0 rgba(255,255,255,0.15) inset,
+      0 -3px 6px rgba(0,0,0,0.4) inset,
+      0 6px 0 #4a0a0e,
+      0 8px 16px rgba(0,0,0,0.5);
+    text-shadow:
+      0 -1px 0 rgba(0,0,0,0.4),
+      0 0 10px rgba(255,255,255,0.2);
+    position: relative;
+    transition: all 80ms var(--ease);
+    font-family: var(--mono);
+  }
+  .engage:hover { filter: brightness(1.1); }
+  .engage:active {
+    transform: translateY(4px);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.1) inset,
+      0 -2px 3px rgba(0,0,0,0.4) inset,
+      0 2px 0 #4a0a0e,
+      0 3px 8px rgba(0,0,0,0.5);
+  }
+  .engage:disabled { cursor: progress; filter: brightness(0.55); }
+  .engage.loading { animation: btn-pulse 1.3s infinite; }
+  @keyframes btn-pulse { 50% { filter: brightness(1.35); } }
 
   /* Output */
   .output {
     overflow: hidden; max-height: 0; opacity: 0; margin-top: 0;
-    transition: max-height 360ms var(--ease-out), opacity 260ms var(--ease-out),
-                margin-top 360ms var(--ease-out);
+    transition: max-height 340ms var(--ease-out),
+                opacity 240ms var(--ease-out),
+                margin-top 340ms var(--ease-out);
   }
   .output.show { max-height: 240px; opacity: 1; margin-top: 14px; }
   audio {
-    width: 100%; margin: 0 0 10px; border-radius: 10px;
-    filter: invert(0.94) hue-rotate(180deg) contrast(0.95);
+    width: 100%; margin: 0 0 10px; border-radius: 6px;
+    filter: invert(0.88) hue-rotate(180deg) saturate(0.3) brightness(1.05);
   }
   .out-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .dl {
     display: inline-flex; align-items: center; gap: 6px;
-    padding: 9px 13px; border-radius: 10px;
-    background: var(--panel-3); border: 1px solid var(--line); color: var(--text);
-    text-decoration: none; font-size: 13px; font-weight: 500; cursor: pointer;
-    font-family: inherit;
-    transition: transform 140ms var(--ease-out), border-color 180ms var(--ease-out);
+    padding: 9px 14px; border-radius: 6px;
+    background: linear-gradient(180deg, #3c3f47, #1e2024);
+    border: 1px solid #000;
+    color: var(--label);
+    font: 700 10px/1 var(--mono);
+    letter-spacing: 0.14em; text-transform: uppercase;
+    text-decoration: none; cursor: pointer; font-family: var(--mono);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.08) inset,
+      0 -1px 0 rgba(0,0,0,0.4) inset,
+      0 2px 3px rgba(0,0,0,0.3);
+    transition: all 120ms var(--ease);
   }
-  .dl:hover { border-color: var(--accent-2); }
-  .dl:active { transform: scale(0.97); }
-  .dl.primary-dl {
-    background: linear-gradient(135deg, rgba(255,61,110,0.18), rgba(124,92,255,0.18));
-    border-color: rgba(255,61,110,0.5);
-  }
-  .hint { color: var(--muted); font-size: 12px;
-          font-family: ui-monospace, "SF Mono", Menlo, monospace; }
-
-  /* Status (download progress) */
-  .status {
-    display: flex; align-items: center; gap: 10px;
-    color: var(--muted); font-size: 13px; padding: 10px 14px;
-    background: var(--panel-2); border: 1px solid var(--line);
-    border-radius: 10px; margin-bottom: 12px; overflow: hidden; max-height: 60px;
-    transition: opacity 240ms var(--ease-out), max-height 320ms var(--ease-out),
-                margin-bottom 320ms var(--ease-out), padding 320ms var(--ease-out),
-                border-width 320ms var(--ease-out);
-  }
-  .status.hidden {
-    opacity: 0; max-height: 0; margin-bottom: 0;
-    padding-top: 0; padding-bottom: 0;
-    border-top-width: 0; border-bottom-width: 0;
-  }
-  .status .spinner {
-    width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
-    border: 2px solid var(--line-2); border-top-color: var(--accent);
-    animation: spin 0.7s linear infinite;
-  }
-  .status.ready .spinner {
-    border: 0; background: var(--accent-3); animation: none;
-    box-shadow: 0 0 8px var(--accent-3);
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .status .progress-bar {
-    flex: 1; height: 3px; background: var(--line);
-    border-radius: 2px; overflow: hidden; margin-left: 4px;
-  }
-  .status .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--accent-2));
-    width: 0%;
-    transition: width 200ms var(--ease);
+  .dl:hover { color: var(--led-amber); text-shadow: 0 0 4px var(--led-amber); }
+  .dl:active { transform: translateY(1px); }
+  .stamp {
+    font: 500 10px/1 var(--mono);
+    color: var(--lcd-text);
+    text-shadow: 0 0 4px var(--lcd-text);
+    padding: 7px 10px;
+    background: var(--lcd-bg);
+    border: 1px solid #000; border-radius: 3px;
+    letter-spacing: 0.04em;
   }
 
   .err {
-    color: var(--danger); font-size: 13px; margin-top: 10px;
-    background: rgba(255,122,138,0.08); border: 1px solid rgba(255,122,138,0.25);
-    padding: 10px 12px; border-radius: 8px; display: none;
+    margin-top: 12px;
+    font: 500 11px/1.4 var(--mono);
+    color: var(--led-red);
+    background: rgba(255,58,46,0.08);
+    padding: 10px 14px;
+    border: 1px solid rgba(255,58,46,0.3);
+    border-left: 3px solid var(--led-red);
+    border-radius: 4px;
+    display: none;
+    text-shadow: 0 0 4px rgba(255,58,46,0.3);
+    letter-spacing: 0.04em;
   }
   .err.show { display: block; }
 
-  .engine-toggle {
-    display: inline-flex; gap: 2px; padding: 3px;
-    background: var(--panel-3); border: 1px solid var(--line);
-    border-radius: 10px; margin-bottom: 14px;
+  .footer {
+    text-align: center; margin-top: 24px;
+    font: 600 9px/1.6 var(--mono);
+    color: var(--label-muted);
+    letter-spacing: 0.18em; text-transform: uppercase;
   }
-  .engine-toggle button {
-    padding: 6px 14px; border: 0; border-radius: 8px;
-    background: transparent; color: var(--muted);
-    font-size: 12px; font-weight: 500; cursor: pointer;
-    font-family: inherit; letter-spacing: 0.04em; text-transform: uppercase;
-    transition: background 160ms var(--ease-out), color 160ms var(--ease-out);
-  }
-  .engine-toggle button:hover:not(:disabled) { color: var(--text); }
-  .engine-toggle button.active {
-    background: linear-gradient(135deg, rgba(255,61,110,0.22), rgba(124,92,255,0.22));
-    color: #fff;
-  }
-  .engine-toggle button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .footer a { color: var(--label-muted); text-decoration: none; transition: color 180ms var(--ease); }
+  .footer a:hover { color: var(--led-amber); }
 
-  .footer { text-align: center; color: var(--muted-2); font-size: 12px; margin-top: 28px; }
-  .footer a { color: var(--muted); text-decoration: none;
-              transition: color 180ms var(--ease); }
-  .footer a:hover { color: var(--text); }
-  kbd {
-    background: var(--panel-3); border: 1px solid var(--line);
-    padding: 1px 5px; border-radius: 4px;
-    font-family: ui-monospace, monospace; font-size: 11px; color: var(--muted);
+  /* Hidden real inputs (knobs drive them) */
+  input[type=range] {
+    -webkit-appearance: none; appearance: none;
+    position: absolute; width: 1px; height: 1px; opacity: 0;
+    pointer-events: none;
   }
 
+  @media (max-width: 560px) {
+    .voice-row { grid-template-columns: 1fr; }
+    .brand-meta { display: none; }
+    .brand-mark { font-size: 20px; }
+    .chassis { padding: 34px 14px 14px; }
+    .led-row { gap: 10px; }
+    .status-text { max-width: 140px; }
+  }
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      transition-duration: 0.01ms !important;
-    }
-    .preset { opacity: 1; transform: none; }
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
   }
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="head">
-    <div class="logo"></div>
-    <h1>PlugMyTag</h1>
-  </div>
-  <div class="sub">Free producer-tag generator. Neural voice. Runs in your browser.</div>
+  <div class="chassis">
+    <div class="screw tl"></div><div class="screw tr"></div>
+    <div class="screw bl"></div><div class="screw br"></div>
 
-  <div class="status" id="status">
-    <span class="spinner"></span>
-    <span id="statusText">Ready</span>
-    <div class="progress-bar" id="progressBar" style="display:none">
-      <div class="progress-fill" id="progressFill"></div>
+    <div class="brand">
+      <div class="brand-mark">TAG<span class="k">KIT</span></div>
+      <div class="brand-meta">MK-I · Producer Tag Synthesizer</div>
     </div>
-  </div>
 
-  <div class="panel">
-    <h2>Presets</h2>
-    <div class="presets" id="presets"></div>
-  </div>
-
-  <div class="panel">
-    <h2>Your Tag</h2>
-    <label class="field" for="text">Tag text</label>
-    <input id="text" type="text" placeholder="Prod by YourName" value="Prod by Austn" maxlength="120" />
-  </div>
-
-  <div class="panel">
-    <h2>Voice</h2>
-    <div class="engine-toggle" id="engineToggle">
-      <button type="button" data-engine="browser" class="active">Browser</button>
-      <button type="button" data-engine="mac" disabled title="Run server.py for Mac voices">Mac</button>
-    </div>
-    <div class="row two">
-      <div>
-        <label class="field" for="voice">Voice model</label>
-        <select id="voice"></select>
+    <div class="status-strip">
+      <div class="led-row">
+        <div class="led-item"><span class="led green on"></span><span class="led-lbl">PWR</span></div>
+        <div class="led-item"><span class="led amber" id="ledReady"></span><span class="led-lbl">RDY</span></div>
+        <div class="led-item"><span class="led red" id="ledBusy"></span><span class="led-lbl">RUN</span></div>
       </div>
-      <div class="ctrl">
-        <div class="ctrl-hd"><span>Speed</span><span class="val" id="speedVal">1.00×</span></div>
-        <input id="speed" type="range" min="0.6" max="1.6" step="0.05" value="1.0" />
+      <div class="progress-bar" id="progressBar" style="display:none">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="status-text" id="statusText">BOOTING…</div>
+    </div>
+
+    <div class="module">
+      <div class="module-label"><span>Presets</span></div>
+      <div class="presets" id="presets"></div>
+    </div>
+
+    <div class="module">
+      <div class="module-label"><span>Tag Text</span></div>
+      <div class="lcd-field">
+        <input id="text" type="text" placeholder="PROD BY YOURNAME" value="Prod by Austn" maxlength="120" spellcheck="false" autocomplete="off" />
       </div>
     </div>
-    <div class="ctrl" style="margin-top:14px">
-      <div class="ctrl-hd"><span>Pitch</span><span class="val" id="pitchVal">0 st</span></div>
+
+    <div class="module">
+      <div class="module-label">
+        <span>Voice</span>
+        <div class="engine-toggle" id="engineToggle">
+          <button type="button" data-engine="browser" class="active">Browser</button>
+          <button type="button" data-engine="mac" disabled title="Run server.py for Mac voices">Mac</button>
+        </div>
+      </div>
+      <div class="voice-row">
+        <div class="select-wrap">
+          <label for="voice">Model</label>
+          <select id="voice"></select>
+        </div>
+        <div class="knob" data-target="speed">
+          <div class="knob-label">Speed</div>
+          <div class="knob-dial"></div>
+          <div class="knob-val" id="speedVal">1.00×</div>
+        </div>
+        <div class="knob" data-target="pitch">
+          <div class="knob-label">Pitch</div>
+          <div class="knob-dial"></div>
+          <div class="knob-val" id="pitchVal">0 st</div>
+        </div>
+      </div>
+      <input id="speed" type="range" min="0.6" max="1.6" step="0.05" value="1.0" />
       <input id="pitch" type="range" min="-12" max="12" step="1" value="0" />
     </div>
-  </div>
 
-  <div class="panel">
-    <h2>Effects</h2>
-    <div class="fx" id="fxGrid"></div>
-    <div class="ctrl" style="margin-top:14px">
-      <div class="ctrl-hd"><span>Reverb wet</span><span class="val" id="reverbAmountVal">0.40</span></div>
+    <div class="module">
+      <div class="module-label"><span>Effects</span></div>
+      <div class="fx-grid" id="fxGrid"></div>
+      <div class="reverb-row">
+        <div class="knob" data-target="reverbAmount" style="flex-direction:row; gap:12px">
+          <div class="knob-dial"></div>
+        </div>
+        <div class="reverb-row-txt">
+          <div class="knob-label">Reverb Wet</div>
+          <div class="knob-val" id="reverbAmountVal">0.40</div>
+        </div>
+      </div>
       <input id="reverbAmount" type="range" min="0" max="1" step="0.05" value="0.4" />
     </div>
-  </div>
 
-  <div class="panel">
-    <button id="go" class="primary" disabled>
-      <span class="btn-content">Generate Tag</span>
-    </button>
-    <div id="err" class="err"></div>
-    <div id="output" class="output">
-      <audio id="player" controls></audio>
-      <div class="out-meta">
-        <a id="download" class="dl primary-dl" download>↓ Download WAV</a>
-        <span class="hint" id="stamp"></span>
+    <div class="module">
+      <button id="go" class="engage" disabled>
+        <span class="btn-content">◉ ENGAGE</span>
+      </button>
+      <div id="err" class="err"></div>
+      <div id="output" class="output">
+        <audio id="player" controls></audio>
+        <div class="out-meta">
+          <a id="download" class="dl" download>↓ Save WAV</a>
+          <span class="stamp" id="stamp"></span>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="footer">
-    Press <kbd>Enter</kbd> to generate ·
-    <a href="https://github.com/AUstnnnnnn/plugmytag-local" target="_blank" rel="noopener">github</a> ·
-    MIT
+    <div class="footer">
+      [Enter] to engage ·
+      <a href="https://github.com/AUstnnnnnn/plugmytag-local" target="_blank" rel="noopener">Source</a> ·
+      MIT
+    </div>
   </div>
 </div>
 
@@ -412,7 +652,7 @@
 import * as tts from "https://cdn.jsdelivr.net/npm/@diffusionstudio/vits-web@1.0.3/dist/vits-web.js";
 
 /* =========================================================================
- * PlugMyTag — Piper (VITS) + Web Audio FX → WAV
+ * TagKit — Piper (VITS) or macOS `say` + Web Audio / ffmpeg FX → WAV
  * ========================================================================= */
 
 const BROWSER_VOICES = [
@@ -430,7 +670,7 @@ const BROWSER_VOICES = [
   { id: "en_GB-cori-high",          name: "Cori (UK female) HQ" },
 ];
 
-let MAC_VOICES = []; // filled by /voices probe
+let MAC_VOICES = [];
 
 const FX_DEFS = [
   { key: "reverb",      label: "Reverb" },
@@ -517,7 +757,7 @@ const MAC_PRESETS = [
     fx: { compression: true } },
 ];
 
-let engine = "browser"; // "browser" | "mac"
+let engine = "browser";
 const voicesForEngine = () =>
   engine === "mac"
     ? MAC_VOICES.map(v => ({ id: v.name, name: `${v.name} (${v.locale})` }))
@@ -530,7 +770,8 @@ const presetsEl = $("presets"), fxGrid = $("fxGrid");
 const voiceSel  = $("voice"), textEl = $("text");
 const speedEl   = $("speed"), pitchEl = $("pitch"), reverbAmt = $("reverbAmount");
 const goBtn     = $("go"), errEl = $("err");
-const statusEl  = $("status"), statusTxt = $("statusText");
+const statusTxt = $("statusText");
+const ledReady  = $("ledReady"), ledBusy = $("ledBusy");
 const progressBar = $("progressBar"), progressFill = $("progressFill");
 const outputEl  = $("output"), playerEl = $("player");
 const dlEl      = $("download"), stampEl = $("stamp");
@@ -573,17 +814,17 @@ engineToggle.querySelectorAll("button").forEach(b => {
   });
 });
 
+/* FX rockers */
 for (const f of FX_DEFS) {
   const el = document.createElement("label");
-  el.className = "fx-item"; el.dataset.fx = f.key;
-  el.innerHTML = `<span class="dot"></span>
-                  <input type="checkbox" data-fx="${f.key}"/>
-                  <span class="lbl">${f.label}</span>`;
+  el.className = "fx-rocker"; el.dataset.fx = f.key;
+  el.innerHTML = `<input type="checkbox" data-fx="${f.key}"/><span class="led"></span><span class="lbl">${f.label}</span>`;
   const cb = el.querySelector("input");
   cb.addEventListener("change", () => el.classList.toggle("on", cb.checked));
   fxGrid.appendChild(el);
 }
 
+/* Slider value bindings */
 const bindSlider = (el, valEl, fmt) => {
   const fn = () => valEl.textContent = fmt(el.value);
   el.addEventListener("input", fn); fn();
@@ -591,6 +832,72 @@ const bindSlider = (el, valEl, fmt) => {
 bindSlider(speedEl, $("speedVal"), (v) => parseFloat(v).toFixed(2) + "×");
 bindSlider(pitchEl, $("pitchVal"), (v) => (v > 0 ? "+" : "") + v + " st");
 bindSlider(reverbAmt, $("reverbAmountVal"), (v) => parseFloat(v).toFixed(2));
+
+/* Knob interaction — drag, wheel */
+function bindKnob(knobEl) {
+  const target = knobEl.dataset.target;
+  const input = $(target);
+  const dial = knobEl.querySelector(".knob-dial");
+  const min = parseFloat(input.min);
+  const max = parseFloat(input.max);
+  const step = parseFloat(input.step) || 0.01;
+  const decimals = step >= 1 ? 0 : Math.max(0, Math.ceil(-Math.log10(step)));
+
+  function render() {
+    const v = parseFloat(input.value);
+    const pct = (v - min) / (max - min);
+    const angle = -135 + pct * 270;
+    dial.style.setProperty("--angle", angle + "deg");
+  }
+  render();
+  input.addEventListener("input", render);
+
+  let dragging = false, startY = 0, startVal = 0;
+  const down = (e) => {
+    dragging = true;
+    startY = e.touches ? e.touches[0].clientY : e.clientY;
+    startVal = parseFloat(input.value);
+    document.body.style.userSelect = "none";
+    e.preventDefault();
+  };
+  const move = (e) => {
+    if (!dragging) return;
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    const dy = startY - y;
+    const range = max - min;
+    const sens = 180;
+    let v = startVal + (dy / sens) * range;
+    v = Math.max(min, Math.min(max, v));
+    v = Math.round(v / step) * step;
+    input.value = v.toFixed(decimals);
+    input.dispatchEvent(new Event("input"));
+  };
+  const up = () => { dragging = false; document.body.style.userSelect = ""; };
+
+  dial.addEventListener("mousedown", down);
+  window.addEventListener("mousemove", move);
+  window.addEventListener("mouseup", up);
+  dial.addEventListener("touchstart", down, { passive: false });
+  window.addEventListener("touchmove", move, { passive: true });
+  window.addEventListener("touchend", up);
+
+  dial.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    let v = parseFloat(input.value) - Math.sign(e.deltaY) * step;
+    v = Math.max(min, Math.min(max, v));
+    input.value = v.toFixed(decimals);
+    input.dispatchEvent(new Event("input"));
+  }, { passive: false });
+
+  dial.addEventListener("dblclick", () => {
+    const mid = target === "pitch" ? 0
+              : target === "reverbAmount" ? 0.4
+              : 1.0;
+    input.value = mid.toFixed(decimals);
+    input.dispatchEvent(new Event("input"));
+  });
+}
+document.querySelectorAll(".knob").forEach(bindKnob);
 
 textEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !goBtn.disabled) generate();
@@ -616,21 +923,26 @@ function applyPreset(p) {
   for (const f of FX_DEFS) setFx(f.key, p.fx[f.key]);
 }
 
-/* ---------- Status ---------- */
+/* ---------- Status + LEDs ---------- */
 function setStatus({ text, ready = false, progress = null }) {
-  statusEl.classList.remove("hidden");
-  statusEl.classList.toggle("ready", ready);
-  statusTxt.textContent = text;
+  statusTxt.textContent = String(text).toUpperCase();
   if (progress !== null) {
     progressBar.style.display = "block";
     progressFill.style.width = (progress * 100).toFixed(1) + "%";
+    ledBusy.classList.add("on"); ledReady.classList.remove("on");
   } else {
     progressBar.style.display = "none";
+    if (ready) { ledReady.classList.add("on"); ledBusy.classList.remove("on"); }
+    else { ledBusy.classList.add("on"); ledReady.classList.remove("on"); }
   }
 }
-function hideStatus() { setTimeout(() => statusEl.classList.add("hidden"), 500); }
+function markReady() {
+  ledBusy.classList.remove("on");
+  ledReady.classList.add("on");
+  progressBar.style.display = "none";
+}
 
-/* ---------- Boot: probe Mac server, set default engine ---------- */
+/* ---------- Probe Mac server ---------- */
 async function probeMacServer() {
   try {
     const r = await fetch("/voices", { cache: "no-store" });
@@ -653,8 +965,7 @@ async function probeMacServer() {
     macBtn.disabled = false;
     macBtn.title = "";
     setEngine("mac");
-    setStatus({ text: `Mac mode. ${MAC_VOICES.length} voices.`, ready: true });
-    hideStatus();
+    setStatus({ text: `Mac mode · ${MAC_VOICES.length} voices`, ready: true });
     goBtn.disabled = false;
     return;
   }
@@ -662,34 +973,33 @@ async function probeMacServer() {
   try {
     const cached = await tts.stored();
     if (cached && cached.length > 0) {
-      setStatus({ text: `Ready. ${cached.length} voice(s) cached.`, ready: true });
+      setStatus({ text: `Ready · ${cached.length} voice(s) cached`, ready: true });
     } else {
-      setStatus({ text: "Ready. First voice downloads on generate (~20 MB).", ready: true });
+      setStatus({ text: "Ready · first voice ~20 MB on gen", ready: true });
     }
-    hideStatus();
     goBtn.disabled = false;
   } catch (e) {
-    setStatus({ text: "Ready.", ready: true });
-    hideStatus();
+    setStatus({ text: "Ready", ready: true });
     goBtn.disabled = false;
   }
 })();
 
-/* ---------- Ensure voice model is cached ---------- */
+/* ---------- Ensure voice cached (Browser mode) ---------- */
 async function ensureVoice(voiceId) {
   const cached = await tts.stored();
   if (cached.includes(voiceId)) return;
-  setStatus({ text: `Downloading voice: ${voiceId}`, progress: 0 });
+  setStatus({ text: `Downloading ${voiceId}`, progress: 0 });
   await tts.download(voiceId, (ev) => {
     if (ev && ev.total) {
-      setStatus({ text: `Downloading voice (${(ev.loaded / 1024 / 1024).toFixed(1)} / ${(ev.total / 1024 / 1024).toFixed(1)} MB)`, progress: ev.loaded / ev.total });
+      const mb = (ev.loaded / 1024 / 1024).toFixed(1);
+      const total = (ev.total / 1024 / 1024).toFixed(1);
+      setStatus({ text: `DL ${mb} / ${total} MB`, progress: ev.loaded / ev.total });
     }
   });
-  setStatus({ text: "Voice ready.", ready: true });
-  setTimeout(() => statusEl.classList.add("hidden"), 800);
+  setStatus({ text: "Voice ready", ready: true });
 }
 
-/* ---------- FX ---------- */
+/* ---------- FX helpers ---------- */
 function makeImpulseResponse(ctx, seconds = 2.4, decay = 3.0) {
   const len = Math.max(1, Math.floor(ctx.sampleRate * seconds));
   const ir = ctx.createBuffer(2, len, ctx.sampleRate);
@@ -701,7 +1011,6 @@ function makeImpulseResponse(ctx, seconds = 2.4, decay = 3.0) {
   }
   return ir;
 }
-
 function makeDistortionCurve(amount = 0.35) {
   const k = amount * 100, n = 44100;
   const curve = new Float32Array(n);
@@ -712,7 +1021,6 @@ function makeDistortionCurve(amount = 0.35) {
   }
   return curve;
 }
-
 async function decodeWav(blob) {
   const ab = await blob.arrayBuffer();
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -720,7 +1028,6 @@ async function decodeWav(blob) {
   ctx.close();
   return buf;
 }
-
 async function renderWithEffects(inputBuffer, { speed, pitch, fx }) {
   const sr = inputBuffer.sampleRate;
   const effectiveSamples = Math.ceil(inputBuffer.length / speed);
@@ -790,7 +1097,6 @@ async function renderWithEffects(inputBuffer, { speed, pitch, fx }) {
   return await offline.startRendering();
 }
 
-/* ---------- AudioBuffer → WAV blob ---------- */
 function audioBufferToWavBlob(buffer) {
   const numCh = buffer.numberOfChannels, sr = buffer.sampleRate;
   const samples = buffer.length, blockAlign = numCh * 2;
@@ -835,7 +1141,7 @@ async function generate() {
 
     let outBlob, duration;
     if (engine === "mac") {
-      setStatus({ text: `Synthesizing via say (${voiceId})…` });
+      setStatus({ text: `Synthesizing · ${voiceId}` });
       const res = await fetch("/generate", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -858,10 +1164,10 @@ async function generate() {
       try { duration = (await decodeWav(outBlob)).duration; } catch { duration = 0; }
     } else {
       await ensureVoice(voiceId);
-      setStatus({ text: "Synthesizing…" });
+      setStatus({ text: "Synthesizing" });
       const wavBlob = await tts.predict({ text, voiceId });
       const inputBuffer = await decodeWav(wavBlob);
-      setStatus({ text: "Applying effects…" });
+      setStatus({ text: "Applying effects" });
       const rendered = await renderWithEffects(inputBuffer, { speed, pitch, fx });
       outBlob = audioBufferToWavBlob(rendered);
       duration = rendered.duration;
@@ -874,12 +1180,14 @@ async function generate() {
     stampEl.textContent = `${(outBlob.size / 1024).toFixed(1)} KB · ${duration.toFixed(2)}s`;
     outputEl.classList.add("show");
     playerEl.play().catch(() => {});
-    statusEl.classList.add("hidden");
+    setStatus({ text: "Ready", ready: true });
+    markReady();
   } catch (e) {
     errEl.textContent = e.message || "Generation failed";
     errEl.classList.add("show");
     console.error(e);
-    statusEl.classList.add("hidden");
+    setStatus({ text: "Error", ready: false });
+    markReady();
   } finally {
     goBtn.disabled = false;
     goBtn.classList.remove("loading");

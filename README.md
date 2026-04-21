@@ -1,41 +1,37 @@
-# PlugMyTag
+# TagKit
 
-Free producer-tag generator. Two engines, one UI. Inspired by [plugmytag.com](https://www.plugmytag.com).
+Producer tag synthesizer. Studio-rack UI. Two engines, one chassis.
 
 <p align="center">
-  <a href="https://austnnnnnn.github.io/plugmytag-local/"><b>→ Live app (Browser mode)</b></a>
+  <a href="https://austnnnnnn.github.io/plugmytag-local/"><b>→ Live (Browser mode)</b></a>
 </p>
 
 ## Two modes
 
 | Mode | Engine | Runs on | Deployable | Quality |
 |---|---|---|---|---|
-| **Browser** | [Piper](https://github.com/rhasspy/piper) VITS models via WASM + Web Audio | Any device, any browser | GitHub Pages ✓ | Decent |
-| **Mac** | macOS `say` + ffmpeg, via `server.py` | macOS only, local | No (needs CLI) | Much better |
+| **Browser** | [Piper](https://github.com/rhasspy/piper) VITS via WASM + Web Audio | Any device | GitHub Pages ✓ | Decent |
+| **Mac** | macOS `say` + ffmpeg via `server.py` | macOS only, local | No | Much better |
 
-The UI auto-detects the Mac server on boot. If reachable, the engine toggle flips to **Mac** and loads 70+ system voices. Otherwise stays in **Browser**.
-
-## What it does
-
-Type a tag (`"Prod by YourName"`), pick a preset, hit generate. Get a styled WAV.
-
-## Presets
-
-🎙️ Classic Tag · 🔥 Trap God · 😈 Demon · 🐿️ Chipmunk · 📻 Radio DJ · ☎️ Telephone · 🎬 Cinematic · 📢 Stadium · 🌊 Underwater · 💿 Dusty Vinyl · 🎩 British Announcer · 🧼 Dry & Clean
-
-Each preset dials in voice / speed / pitch / reverb / FX. Browser and Mac have separate preset tables tuned for each engine.
+UI auto-probes `/voices` on boot. Server reachable → engine toggle flips to **Mac** and loads 70+ system voices. Unreachable → **Browser** only.
 
 ## Controls
 
-- **Voice** — Piper model (Browser) or system `say` voice (Mac)
-- **Speed** — 0.6× to 1.6×
-- **Pitch** — ±12 semitones
-- **Reverb wet** — 0 to 1
-- **FX** — reverb, delay, distortion, compression, low-pass, high-pass, bass boost
+- **Model** — Piper voice (Browser) or `say` voice (Mac)
+- **Speed knob** — 0.6× to 1.6× (drag, scroll, or double-click to center)
+- **Pitch knob** — ±12 semitones
+- **Reverb knob** — 0 to 1 wet
+- **FX rockers** — reverb · delay · distortion · compression · low-pass · high-pass · bass
 
-Browser mode uses Web Audio (`OfflineAudioContext` → WAV). Mac mode uses ffmpeg filter chains (`atempo`, `asetrate`, `aecho`, `acrusher`, `acompressor`, biquads).
+Browser mode renders through `OfflineAudioContext` (Convolver, Delay, WaveShaper, DynamicsCompressor, Biquad). Mac mode sends params to ffmpeg (`atempo`, `asetrate`, `aecho`, `acrusher`, `acompressor`, biquads).
 
-## Run — Browser mode (any OS)
+## Presets
+
+🎙️ Classic · 🔥 Trap God · 😈 Demon · 🐿️ Chipmunk · 📻 Radio DJ · ☎️ Telephone · 🎬 Cinematic · 📢 Stadium · 🌊 Underwater · 💿 Dusty Vinyl · 🎩 British Announcer · 🧼 Dry & Clean
+
+Browser and Mac have separate preset tables tuned for each engine.
+
+## Run — Browser mode
 
 ```bash
 git clone https://github.com/AUstnnnnnn/plugmytag-local.git
@@ -44,11 +40,11 @@ python3 -m http.server 8000
 # open http://localhost:8000
 ```
 
-Any static server works. Piper model downloads on first generate (~20 MB, cached in OPFS).
+Piper voice downloads on first generate (~20 MB, cached in OPFS).
 
 ## Run — Mac mode (macOS only)
 
-Requires `ffmpeg` (`brew install ffmpeg`) and Python 3.
+Requires `ffmpeg` (`brew install ffmpeg`) + Python 3.
 
 ```bash
 git clone https://github.com/AUstnnnnnn/plugmytag-local.git
@@ -58,7 +54,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 # open http://localhost:5173
 ```
 
-Server serves `docs/index.html` + exposes `/voices` and `/generate`. UI auto-switches to Mac mode.
+UI auto-switches to Mac mode.
 
 ## License
 
