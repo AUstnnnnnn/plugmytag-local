@@ -581,7 +581,7 @@
         <span>Voice</span>
         <div class="engine-toggle" id="engineToggle">
           <button type="button" data-engine="browser" class="active">Browser</button>
-          <button type="button" data-engine="mac" disabled title="Run server.py for Mac voices">Mac</button>
+          <button type="button" data-engine="mac" title="Requires local server.py">Mac</button>
         </div>
       </div>
       <div class="voice-row">
@@ -758,6 +758,7 @@ const MAC_PRESETS = [
 ];
 
 let engine = "browser";
+let macAvailable = false;
 const voicesForEngine = () =>
   engine === "mac"
     ? MAC_VOICES.map(v => ({ id: v.name, name: `${v.name} (${v.locale})` }))
@@ -809,7 +810,13 @@ function setEngine(mode) {
 
 engineToggle.querySelectorAll("button").forEach(b => {
   b.addEventListener("click", () => {
-    if (b.disabled || b.dataset.engine === engine) return;
+    if (b.dataset.engine === engine) return;
+    if (b.dataset.engine === "mac" && !macAvailable) {
+      errEl.textContent = "Mac mode needs local server. Run: python3 server.py";
+      errEl.classList.add("show");
+      return;
+    }
+    errEl.classList.remove("show");
     setEngine(b.dataset.engine);
   });
 });
@@ -961,8 +968,8 @@ async function probeMacServer() {
 
   const macOk = await probeMacServer();
   if (macOk) {
+    macAvailable = true;
     const macBtn = engineToggle.querySelector('button[data-engine="mac"]');
-    macBtn.disabled = false;
     macBtn.title = "";
     setEngine("mac");
     setStatus({ text: `Mac mode · ${MAC_VOICES.length} voices`, ready: true });
