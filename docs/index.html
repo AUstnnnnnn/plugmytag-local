@@ -221,7 +221,23 @@
   }
   .lcd-field input::placeholder { color: var(--lcd-dim); text-shadow: none; }
 
-  /* Engine toggle */
+  /* Engine strip */
+  .engine-strip {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 14px; margin-bottom: 10px;
+    background: linear-gradient(180deg, #0a0b0d 0%, #15171b 100%);
+    border: 1px solid rgba(0,0,0,0.7);
+    border-radius: 8px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.05) inset,
+      0 2px 4px rgba(0,0,0,0.3) inset;
+  }
+  .engine-lbl {
+    font: 700 9px/1 var(--mono);
+    color: var(--label-muted);
+    letter-spacing: 0.24em; text-transform: uppercase;
+    text-shadow: 0 1px 0 var(--label-hi), 0 -1px 0 var(--label-shadow);
+  }
   .engine-toggle {
     display: inline-flex; padding: 3px;
     background: linear-gradient(180deg, #0a0b0d, #1a1c20);
@@ -249,19 +265,20 @@
   }
   .engine-toggle button:disabled { opacity: 0.35; cursor: not-allowed; }
 
-  /* Voice row: select + knobs */
-  .voice-row {
-    display: grid; gap: 18px;
-    grid-template-columns: 2fr 1fr 1fr;
-    align-items: end;
-  }
-  .select-wrap label {
+  /* Voice — select full width, knobs row below */
+  .voice-select { margin-bottom: 18px; }
+  .voice-select label {
     display: block;
     font: 700 9px/1 var(--mono);
     color: var(--label-muted);
     letter-spacing: 0.18em; text-transform: uppercase;
     margin-bottom: 8px;
     text-shadow: 0 1px 0 var(--label-hi);
+  }
+  .knob-row {
+    display: grid; gap: 12px;
+    grid-template-columns: repeat(3, 1fr);
+    padding: 4px 0 2px;
   }
   select {
     width: 100%;
@@ -331,25 +348,10 @@
     min-width: 50px; text-align: center;
   }
 
-  /* Reverb row — horizontal knob */
-  .reverb-row {
-    margin-top: 16px;
-    display: flex; align-items: center; gap: 14px;
-    padding: 10px 14px;
-    background: rgba(0,0,0,0.2);
-    border: 1px solid rgba(0,0,0,0.4);
-    border-radius: 6px;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
-  }
-  .reverb-row .knob-dial { width: 44px; height: 44px; }
-  .reverb-row .knob-dial::before { inset: 8px; }
-  .reverb-row .knob-dial::after { top: 4px; height: 8px; }
-  .reverb-row-txt { display: flex; flex-direction: column; gap: 4px; }
-
   /* FX rockers */
   .fx-grid {
     display: grid; gap: 8px;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
   }
   .fx-rocker {
     display: flex; align-items: center; gap: 10px;
@@ -420,7 +422,11 @@
       0 0 12px rgba(255,174,0,0.2),
       0 2px 3px rgba(0,0,0,0.4);
   }
-  .preset .ico { margin-right: 5px; font-size: 12px; }
+  .preset .ico {
+    margin-right: 6px; font-size: 13px;
+    color: var(--led-amber); opacity: 0.85;
+  }
+  .preset.active .ico { opacity: 1; }
 
   /* Engage button */
   .engage {
@@ -529,12 +535,13 @@
   }
 
   @media (max-width: 560px) {
-    .voice-row { grid-template-columns: 1fr; }
+    .fx-grid { grid-template-columns: repeat(2, 1fr); }
     .brand-meta { display: none; }
     .brand-mark { font-size: 20px; }
     .chassis { padding: 34px 14px 14px; }
     .led-row { gap: 10px; }
     .status-text { max-width: 140px; }
+    .engine-strip { flex-wrap: wrap; }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
@@ -564,6 +571,14 @@
       <div class="status-text" id="statusText">BOOTING…</div>
     </div>
 
+    <div class="engine-strip">
+      <span class="engine-lbl">Engine</span>
+      <div class="engine-toggle" id="engineToggle">
+        <button type="button" data-engine="browser" class="active">Browser</button>
+        <button type="button" data-engine="mac" title="Requires local server.py">Mac</button>
+      </div>
+    </div>
+
     <div class="module">
       <div class="module-label"><span>Presets</span></div>
       <div class="presets" id="presets"></div>
@@ -577,18 +592,12 @@
     </div>
 
     <div class="module">
-      <div class="module-label">
-        <span>Voice</span>
-        <div class="engine-toggle" id="engineToggle">
-          <button type="button" data-engine="browser" class="active">Browser</button>
-          <button type="button" data-engine="mac" title="Requires local server.py">Mac</button>
-        </div>
+      <div class="module-label"><span>Voice</span></div>
+      <div class="voice-select">
+        <label for="voice">Model</label>
+        <select id="voice"></select>
       </div>
-      <div class="voice-row">
-        <div class="select-wrap">
-          <label for="voice">Model</label>
-          <select id="voice"></select>
-        </div>
+      <div class="knob-row">
         <div class="knob" data-target="speed">
           <div class="knob-label">Speed</div>
           <div class="knob-dial"></div>
@@ -599,24 +608,20 @@
           <div class="knob-dial"></div>
           <div class="knob-val" id="pitchVal">0 st</div>
         </div>
+        <div class="knob" data-target="reverbAmount">
+          <div class="knob-label">Reverb</div>
+          <div class="knob-dial"></div>
+          <div class="knob-val" id="reverbAmountVal">0.40</div>
+        </div>
       </div>
       <input id="speed" type="range" min="0.6" max="1.6" step="0.05" value="1.0" />
       <input id="pitch" type="range" min="-12" max="12" step="1" value="0" />
+      <input id="reverbAmount" type="range" min="0" max="1" step="0.05" value="0.4" />
     </div>
 
     <div class="module">
       <div class="module-label"><span>Effects</span></div>
       <div class="fx-grid" id="fxGrid"></div>
-      <div class="reverb-row">
-        <div class="knob" data-target="reverbAmount" style="flex-direction:row; gap:12px">
-          <div class="knob-dial"></div>
-        </div>
-        <div class="reverb-row-txt">
-          <div class="knob-label">Reverb Wet</div>
-          <div class="knob-val" id="reverbAmountVal">0.40</div>
-        </div>
-      </div>
-      <input id="reverbAmount" type="range" min="0" max="1" step="0.05" value="0.4" />
     </div>
 
     <div class="module">
@@ -683,76 +688,76 @@ const FX_DEFS = [
 ];
 
 const BROWSER_PRESETS = [
-  { id: "classic", icon: "🎙️", name: "Classic Tag",
+  { id: "classic", icon: "◉", name: "Classic Tag",
     voice: "en_US-hfc_male-medium", speed: 1.0, pitch: 0, reverbAmount: 0.35,
     fx: { reverb: true, compression: true } },
-  { id: "trap", icon: "🔥", name: "Trap God",
+  { id: "trap", icon: "▲", name: "Trap God",
     voice: "en_US-ryan-high", speed: 0.85, pitch: 0, reverbAmount: 0.55,
     fx: { reverb: true, distortion: true, compression: true, bass: true } },
-  { id: "demon", icon: "😈", name: "Demon",
+  { id: "demon", icon: "✕", name: "Demon",
     voice: "en_US-ryan-high", speed: 0.7, pitch: 0, reverbAmount: 0.75,
     fx: { reverb: true, distortion: true, bass: true } },
-  { id: "chipmunk", icon: "🐿️", name: "Chipmunk",
+  { id: "chipmunk", icon: "⇈", name: "Chipmunk",
     voice: "en_US-amy-medium", speed: 1.45, pitch: 0, reverbAmount: 0.15,
     fx: { compression: true } },
-  { id: "radio", icon: "📻", name: "Radio DJ",
+  { id: "radio", icon: "∿", name: "Radio DJ",
     voice: "en_US-hfc_female-medium", speed: 1.02, pitch: 0, reverbAmount: 0.15,
     fx: { compression: true, highpass: true } },
-  { id: "phone", icon: "☎️", name: "Telephone",
+  { id: "phone", icon: "☏", name: "Telephone",
     voice: "en_US-hfc_male-medium", speed: 1.0, pitch: 0, reverbAmount: 0,
     fx: { lowpass: true, highpass: true, distortion: true } },
-  { id: "cinematic", icon: "🎬", name: "Cinematic",
+  { id: "cinematic", icon: "▰", name: "Cinematic",
     voice: "en_US-ryan-high", speed: 0.9, pitch: 0, reverbAmount: 0.85,
     fx: { reverb: true, delay: true, bass: true, compression: true } },
-  { id: "stadium", icon: "📢", name: "Stadium",
+  { id: "stadium", icon: "◢", name: "Stadium",
     voice: "en_GB-alan-medium", speed: 0.95, pitch: 0, reverbAmount: 0.9,
     fx: { reverb: true, delay: true, bass: true } },
-  { id: "underwater", icon: "🌊", name: "Underwater",
+  { id: "underwater", icon: "≋", name: "Underwater",
     voice: "en_GB-alba-medium", speed: 0.95, pitch: 0, reverbAmount: 0.8,
     fx: { reverb: true, lowpass: true } },
-  { id: "vinyl", icon: "💿", name: "Dusty Vinyl",
+  { id: "vinyl", icon: "◎", name: "Dusty Vinyl",
     voice: "en_US-hfc_male-medium", speed: 0.98, pitch: 0, reverbAmount: 0.3,
     fx: { reverb: true, distortion: true, lowpass: true, compression: true } },
-  { id: "british", icon: "🎩", name: "British Announcer",
+  { id: "british", icon: "◆", name: "British Announcer",
     voice: "en_GB-alan-medium", speed: 0.98, pitch: 0, reverbAmount: 0.2,
     fx: { compression: true } },
-  { id: "dry", icon: "🧼", name: "Dry & Clean",
+  { id: "dry", icon: "□", name: "Dry & Clean",
     voice: "en_US-hfc_male-medium", speed: 1.0, pitch: 0, reverbAmount: 0,
     fx: { compression: true } },
 ];
 
 const MAC_PRESETS = [
-  { id: "classic", icon: "🎙️", name: "Classic Tag",
+  { id: "classic", icon: "◉", name: "Classic Tag",
     voice: "Alex", speed: 1.0, pitch: -1, reverbAmount: 0.4,
     fx: { reverb: true, compression: true } },
-  { id: "trap", icon: "🔥", name: "Trap God",
+  { id: "trap", icon: "▲", name: "Trap God",
     voice: "Fred", speed: 0.95, pitch: -4, reverbAmount: 0.6,
     fx: { reverb: true, distortion: true, compression: true, bass: true } },
-  { id: "demon", icon: "😈", name: "Demon",
+  { id: "demon", icon: "✕", name: "Demon",
     voice: "Fred", speed: 0.9, pitch: -7, reverbAmount: 0.75,
     fx: { reverb: true, distortion: true, bass: true, compression: true } },
-  { id: "chipmunk", icon: "🐿️", name: "Chipmunk",
+  { id: "chipmunk", icon: "⇈", name: "Chipmunk",
     voice: "Samantha", speed: 1.1, pitch: 7, reverbAmount: 0.2,
     fx: { compression: true } },
-  { id: "radio", icon: "📻", name: "Radio DJ",
+  { id: "radio", icon: "∿", name: "Radio DJ",
     voice: "Victoria", speed: 1.0, pitch: 0, reverbAmount: 0.25,
     fx: { reverb: true, compression: true, highpass: true } },
-  { id: "phone", icon: "☎️", name: "Telephone",
+  { id: "phone", icon: "☏", name: "Telephone",
     voice: "Daniel", speed: 1.0, pitch: 0, reverbAmount: 0,
     fx: { highpass: true, lowpass: true, distortion: true } },
-  { id: "cinematic", icon: "🎬", name: "Cinematic",
+  { id: "cinematic", icon: "▰", name: "Cinematic",
     voice: "Daniel", speed: 0.95, pitch: -2, reverbAmount: 0.85,
     fx: { reverb: true, delay: true, bass: true, compression: true } },
-  { id: "stadium", icon: "📢", name: "Stadium",
+  { id: "stadium", icon: "◢", name: "Stadium",
     voice: "Ralph", speed: 1.0, pitch: -1, reverbAmount: 0.9,
     fx: { reverb: true, delay: true, bass: true } },
-  { id: "underwater", icon: "🌊", name: "Underwater",
+  { id: "underwater", icon: "≋", name: "Underwater",
     voice: "Fiona", speed: 0.95, pitch: -2, reverbAmount: 0.8,
     fx: { reverb: true, lowpass: true } },
-  { id: "vinyl", icon: "💿", name: "Dusty Vinyl",
+  { id: "vinyl", icon: "◎", name: "Dusty Vinyl",
     voice: "Alex", speed: 0.98, pitch: -1, reverbAmount: 0.3,
     fx: { reverb: true, distortion: true, lowpass: true, compression: true } },
-  { id: "dry", icon: "🧼", name: "Dry & Clean",
+  { id: "dry", icon: "□", name: "Dry & Clean",
     voice: "Samantha", speed: 1.0, pitch: 0, reverbAmount: 0,
     fx: { compression: true } },
 ];
