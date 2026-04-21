@@ -1,49 +1,41 @@
 # PlugMyTag
 
-Free producer-tag generator. Runs **entirely in your browser** — no server, no API keys, no cloud. Inspired by [plugmytag.com](https://www.plugmytag.com).
+Free producer-tag generator. Two engines, one UI. Inspired by [plugmytag.com](https://www.plugmytag.com).
 
 <p align="center">
-  <a href="https://austnnnnnn.github.io/plugmytag-local/"><b>→ Live app</b></a>
+  <a href="https://austnnnnnn.github.io/plugmytag-local/"><b>→ Live app (Browser mode)</b></a>
 </p>
+
+## Two modes
+
+| Mode | Engine | Runs on | Deployable | Quality |
+|---|---|---|---|---|
+| **Browser** | [Piper](https://github.com/rhasspy/piper) VITS models via WASM + Web Audio | Any device, any browser | GitHub Pages ✓ | Decent |
+| **Mac** | macOS `say` + ffmpeg, via `server.py` | macOS only, local | No (needs CLI) | Much better |
+
+The UI auto-detects the Mac server on boot. If reachable, the engine toggle flips to **Mac** and loads 70+ system voices. Otherwise stays in **Browser**.
 
 ## What it does
 
-Type a tag (`"Prod by YourName"`), pick a preset, hit generate. Get a styled WAV download. All synthesis and effects run client-side via Web Audio API.
-
-## Stack
-
-| Layer | Tool |
-|---|---|
-| TTS | [sam-js](https://github.com/discordier/sam) — Software Automatic Mouth (~20KB) |
-| Effects | Web Audio API — Convolver, Delay, WaveShaper, DynamicsCompressor, Biquad |
-| Render | `OfflineAudioContext` → `AudioBuffer` → WAV encoder |
-| Hosting | Static single file on GitHub Pages |
-
-No build step. One HTML file. Loads sam-js from jsDelivr.
+Type a tag (`"Prod by YourName"`), pick a preset, hit generate. Get a styled WAV.
 
 ## Presets
 
-🎙️ Classic Tag · 🔥 Trap God · 😈 Demon · 🐿️ Chipmunk · 📻 Radio DJ · ☎️ Telephone · 🎬 Cinematic · 📢 Stadium · 🌊 Underwater · 💿 Dusty Vinyl · 👽 Extraterrestrial · 🧼 Dry & Clean
+🎙️ Classic Tag · 🔥 Trap God · 😈 Demon · 🐿️ Chipmunk · 📻 Radio DJ · ☎️ Telephone · 🎬 Cinematic · 📢 Stadium · 🌊 Underwater · 💿 Dusty Vinyl · 🎩 British Announcer · 🧼 Dry & Clean
 
-Each preset dials in speed/pitch/throat/mouth at the TTS layer, plus an FX chain (reverb/delay/distortion/compression/EQ/bass).
+Each preset dials in voice / speed / pitch / reverb / FX. Browser and Mac have separate preset tables tuned for each engine.
 
-## Voice character
+## Controls
 
-SAM has four synthesis knobs:
-- **Speed** — higher is slower (default 72)
-- **Pitch** — higher is higher (default 64)
-- **Throat** — formant 1 (default 128)
-- **Mouth** — formant 2 (default 128)
+- **Voice** — Piper model (Browser) or system `say` voice (Mac)
+- **Speed** — 0.6× to 1.6×
+- **Pitch** — ±12 semitones
+- **Reverb wet** — 0 to 1
+- **FX** — reverb, delay, distortion, compression, low-pass, high-pass, bass boost
 
-Classic voices from the SAM manual:
-| Voice | Speed | Pitch | Throat | Mouth |
-|---|---|---|---|---|
-| Default | 72 | 64 | 128 | 128 |
-| Elf | 72 | 64 | 110 | 160 |
-| Little Robot | 92 | 60 | 190 | 190 |
-| Extraterrestrial | 100 | 64 | 150 | 200 |
+Browser mode uses Web Audio (`OfflineAudioContext` → WAV). Mac mode uses ffmpeg filter chains (`atempo`, `asetrate`, `aecho`, `acrusher`, `acompressor`, biquads).
 
-## Run locally
+## Run — Browser mode (any OS)
 
 ```bash
 git clone https://github.com/AUstnnnnnn/plugmytag-local.git
@@ -52,17 +44,22 @@ python3 -m http.server 8000
 # open http://localhost:8000
 ```
 
-That's it. Any static server works.
+Any static server works. Piper model downloads on first generate (~20 MB, cached in OPFS).
 
-## Why SAM and not a modern AI voice?
+## Run — Mac mode (macOS only)
 
-- **Zero model download** — SAM is 20KB of JS, not 50MB of weights
-- **Instant boot** — no WASM warmup, no model load
-- **Aesthetic fit** — retro robot voice pairs well with crunchy, pitched-down tag effects
-- **Fully offline** after first load
+Requires `ffmpeg` (`brew install ffmpeg`) and Python 3.
 
-For higher-quality voices, swap `sam-js` for [Piper WASM](https://github.com/wide-video/piper-wasm) (~30MB per voice) or a server-side engine.
+```bash
+git clone https://github.com/AUstnnnnnn/plugmytag-local.git
+cd plugmytag-local
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+.venv/bin/python server.py
+# open http://localhost:5173
+```
+
+Server serves `docs/index.html` + exposes `/voices` and `/generate`. UI auto-switches to Mac mode.
 
 ## License
 
-MIT for this repo. sam-js is reverse-engineered from 1980s SoftVoice SAM (abandonware status — see [sam-js license notes](https://github.com/discordier/sam#license)).
+MIT.

@@ -284,6 +284,25 @@
   }
   .err.show { display: block; }
 
+  .engine-toggle {
+    display: inline-flex; gap: 2px; padding: 3px;
+    background: var(--panel-3); border: 1px solid var(--line);
+    border-radius: 10px; margin-bottom: 14px;
+  }
+  .engine-toggle button {
+    padding: 6px 14px; border: 0; border-radius: 8px;
+    background: transparent; color: var(--muted);
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    font-family: inherit; letter-spacing: 0.04em; text-transform: uppercase;
+    transition: background 160ms var(--ease-out), color 160ms var(--ease-out);
+  }
+  .engine-toggle button:hover:not(:disabled) { color: var(--text); }
+  .engine-toggle button.active {
+    background: linear-gradient(135deg, rgba(255,61,110,0.22), rgba(124,92,255,0.22));
+    color: #fff;
+  }
+  .engine-toggle button:disabled { opacity: 0.4; cursor: not-allowed; }
+
   .footer { text-align: center; color: var(--muted-2); font-size: 12px; margin-top: 28px; }
   .footer a { color: var(--muted); text-decoration: none;
               transition: color 180ms var(--ease); }
@@ -332,6 +351,10 @@
 
   <div class="panel">
     <h2>Voice</h2>
+    <div class="engine-toggle" id="engineToggle">
+      <button type="button" data-engine="browser" class="active">Browser</button>
+      <button type="button" data-engine="mac" disabled title="Run server.py for Mac voices">Mac</button>
+    </div>
     <div class="row two">
       <div>
         <label class="field" for="voice">Voice model</label>
@@ -341,6 +364,10 @@
         <div class="ctrl-hd"><span>Speed</span><span class="val" id="speedVal">1.00×</span></div>
         <input id="speed" type="range" min="0.6" max="1.6" step="0.05" value="1.0" />
       </div>
+    </div>
+    <div class="ctrl" style="margin-top:14px">
+      <div class="ctrl-hd"><span>Pitch</span><span class="val" id="pitchVal">0 st</span></div>
+      <input id="pitch" type="range" min="-12" max="12" step="1" value="0" />
     </div>
   </div>
 
@@ -388,7 +415,7 @@ import * as tts from "https://cdn.jsdelivr.net/npm/@diffusionstudio/vits-web@1.0
  * PlugMyTag — Piper (VITS) + Web Audio FX → WAV
  * ========================================================================= */
 
-const VOICES = [
+const BROWSER_VOICES = [
   { id: "en_US-hfc_male-medium",    name: "HFC Male (US) — deep, clean" },
   { id: "en_US-hfc_female-medium",  name: "HFC Female (US)" },
   { id: "en_US-ryan-high",          name: "Ryan (US) — warm, natural" },
@@ -403,6 +430,8 @@ const VOICES = [
   { id: "en_GB-cori-high",          name: "Cori (UK female) HQ" },
 ];
 
+let MAC_VOICES = []; // filled by /voices probe
+
 const FX_DEFS = [
   { key: "reverb",      label: "Reverb" },
   { key: "delay",       label: "Delay" },
@@ -413,70 +442,136 @@ const FX_DEFS = [
   { key: "bass",        label: "Bass boost" },
 ];
 
-const PRESETS = [
+const BROWSER_PRESETS = [
   { id: "classic", icon: "🎙️", name: "Classic Tag",
-    voice: "en_US-hfc_male-medium", speed: 1.0, reverbAmount: 0.35,
+    voice: "en_US-hfc_male-medium", speed: 1.0, pitch: 0, reverbAmount: 0.35,
     fx: { reverb: true, compression: true } },
   { id: "trap", icon: "🔥", name: "Trap God",
-    voice: "en_US-ryan-high", speed: 0.85, reverbAmount: 0.55,
+    voice: "en_US-ryan-high", speed: 0.85, pitch: 0, reverbAmount: 0.55,
     fx: { reverb: true, distortion: true, compression: true, bass: true } },
   { id: "demon", icon: "😈", name: "Demon",
-    voice: "en_US-ryan-high", speed: 0.7, reverbAmount: 0.75,
+    voice: "en_US-ryan-high", speed: 0.7, pitch: 0, reverbAmount: 0.75,
     fx: { reverb: true, distortion: true, bass: true } },
   { id: "chipmunk", icon: "🐿️", name: "Chipmunk",
-    voice: "en_US-amy-medium", speed: 1.45, reverbAmount: 0.15,
+    voice: "en_US-amy-medium", speed: 1.45, pitch: 0, reverbAmount: 0.15,
     fx: { compression: true } },
   { id: "radio", icon: "📻", name: "Radio DJ",
-    voice: "en_US-hfc_female-medium", speed: 1.02, reverbAmount: 0.15,
+    voice: "en_US-hfc_female-medium", speed: 1.02, pitch: 0, reverbAmount: 0.15,
     fx: { compression: true, highpass: true } },
   { id: "phone", icon: "☎️", name: "Telephone",
-    voice: "en_US-hfc_male-medium", speed: 1.0, reverbAmount: 0,
+    voice: "en_US-hfc_male-medium", speed: 1.0, pitch: 0, reverbAmount: 0,
     fx: { lowpass: true, highpass: true, distortion: true } },
   { id: "cinematic", icon: "🎬", name: "Cinematic",
-    voice: "en_US-ryan-high", speed: 0.9, reverbAmount: 0.85,
+    voice: "en_US-ryan-high", speed: 0.9, pitch: 0, reverbAmount: 0.85,
     fx: { reverb: true, delay: true, bass: true, compression: true } },
   { id: "stadium", icon: "📢", name: "Stadium",
-    voice: "en_GB-alan-medium", speed: 0.95, reverbAmount: 0.9,
+    voice: "en_GB-alan-medium", speed: 0.95, pitch: 0, reverbAmount: 0.9,
     fx: { reverb: true, delay: true, bass: true } },
   { id: "underwater", icon: "🌊", name: "Underwater",
-    voice: "en_GB-alba-medium", speed: 0.95, reverbAmount: 0.8,
+    voice: "en_GB-alba-medium", speed: 0.95, pitch: 0, reverbAmount: 0.8,
     fx: { reverb: true, lowpass: true } },
   { id: "vinyl", icon: "💿", name: "Dusty Vinyl",
-    voice: "en_US-hfc_male-medium", speed: 0.98, reverbAmount: 0.3,
+    voice: "en_US-hfc_male-medium", speed: 0.98, pitch: 0, reverbAmount: 0.3,
     fx: { reverb: true, distortion: true, lowpass: true, compression: true } },
   { id: "british", icon: "🎩", name: "British Announcer",
-    voice: "en_GB-alan-medium", speed: 0.98, reverbAmount: 0.2,
+    voice: "en_GB-alan-medium", speed: 0.98, pitch: 0, reverbAmount: 0.2,
     fx: { compression: true } },
   { id: "dry", icon: "🧼", name: "Dry & Clean",
-    voice: "en_US-hfc_male-medium", speed: 1.0, reverbAmount: 0,
+    voice: "en_US-hfc_male-medium", speed: 1.0, pitch: 0, reverbAmount: 0,
     fx: { compression: true } },
 ];
+
+const MAC_PRESETS = [
+  { id: "classic", icon: "🎙️", name: "Classic Tag",
+    voice: "Alex", speed: 1.0, pitch: -1, reverbAmount: 0.4,
+    fx: { reverb: true, compression: true } },
+  { id: "trap", icon: "🔥", name: "Trap God",
+    voice: "Fred", speed: 0.95, pitch: -4, reverbAmount: 0.6,
+    fx: { reverb: true, distortion: true, compression: true, bass: true } },
+  { id: "demon", icon: "😈", name: "Demon",
+    voice: "Fred", speed: 0.9, pitch: -7, reverbAmount: 0.75,
+    fx: { reverb: true, distortion: true, bass: true, compression: true } },
+  { id: "chipmunk", icon: "🐿️", name: "Chipmunk",
+    voice: "Samantha", speed: 1.1, pitch: 7, reverbAmount: 0.2,
+    fx: { compression: true } },
+  { id: "radio", icon: "📻", name: "Radio DJ",
+    voice: "Victoria", speed: 1.0, pitch: 0, reverbAmount: 0.25,
+    fx: { reverb: true, compression: true, highpass: true } },
+  { id: "phone", icon: "☎️", name: "Telephone",
+    voice: "Daniel", speed: 1.0, pitch: 0, reverbAmount: 0,
+    fx: { highpass: true, lowpass: true, distortion: true } },
+  { id: "cinematic", icon: "🎬", name: "Cinematic",
+    voice: "Daniel", speed: 0.95, pitch: -2, reverbAmount: 0.85,
+    fx: { reverb: true, delay: true, bass: true, compression: true } },
+  { id: "stadium", icon: "📢", name: "Stadium",
+    voice: "Ralph", speed: 1.0, pitch: -1, reverbAmount: 0.9,
+    fx: { reverb: true, delay: true, bass: true } },
+  { id: "underwater", icon: "🌊", name: "Underwater",
+    voice: "Fiona", speed: 0.95, pitch: -2, reverbAmount: 0.8,
+    fx: { reverb: true, lowpass: true } },
+  { id: "vinyl", icon: "💿", name: "Dusty Vinyl",
+    voice: "Alex", speed: 0.98, pitch: -1, reverbAmount: 0.3,
+    fx: { reverb: true, distortion: true, lowpass: true, compression: true } },
+  { id: "dry", icon: "🧼", name: "Dry & Clean",
+    voice: "Samantha", speed: 1.0, pitch: 0, reverbAmount: 0,
+    fx: { compression: true } },
+];
+
+let engine = "browser"; // "browser" | "mac"
+const voicesForEngine = () =>
+  engine === "mac"
+    ? MAC_VOICES.map(v => ({ id: v.name, name: `${v.name} (${v.locale})` }))
+    : BROWSER_VOICES;
+const presetsForEngine = () => (engine === "mac" ? MAC_PRESETS : BROWSER_PRESETS);
 
 /* ---------- DOM ---------- */
 const $ = (id) => document.getElementById(id);
 const presetsEl = $("presets"), fxGrid = $("fxGrid");
 const voiceSel  = $("voice"), textEl = $("text");
-const speedEl   = $("speed"), reverbAmt = $("reverbAmount");
+const speedEl   = $("speed"), pitchEl = $("pitch"), reverbAmt = $("reverbAmount");
 const goBtn     = $("go"), errEl = $("err");
 const statusEl  = $("status"), statusTxt = $("statusText");
 const progressBar = $("progressBar"), progressFill = $("progressFill");
 const outputEl  = $("output"), playerEl = $("player");
 const dlEl      = $("download"), stampEl = $("stamp");
+const engineToggle = $("engineToggle");
 
-for (const v of VOICES) {
-  const o = document.createElement("option");
-  o.value = v.id; o.textContent = v.name;
-  voiceSel.appendChild(o);
+function rebuildVoices() {
+  voiceSel.innerHTML = "";
+  for (const v of voicesForEngine()) {
+    const o = document.createElement("option");
+    o.value = v.id; o.textContent = v.name;
+    voiceSel.appendChild(o);
+  }
 }
 
-for (const p of PRESETS) {
-  const b = document.createElement("button");
-  b.type = "button";
-  b.className = "preset"; b.dataset.preset = p.id;
-  b.innerHTML = `<span class="ico">${p.icon}</span>${p.name}`;
-  b.onclick = () => applyPreset(p);
-  presetsEl.appendChild(b);
+function rebuildPresets() {
+  presetsEl.innerHTML = "";
+  for (const p of presetsForEngine()) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "preset"; b.dataset.preset = p.id;
+    b.innerHTML = `<span class="ico">${p.icon}</span>${p.name}`;
+    b.onclick = () => applyPreset(p);
+    presetsEl.appendChild(b);
+  }
 }
+
+function setEngine(mode) {
+  engine = mode;
+  engineToggle.querySelectorAll("button").forEach(b =>
+    b.classList.toggle("active", b.dataset.engine === mode));
+  rebuildVoices();
+  rebuildPresets();
+  applyPreset(presetsForEngine()[0]);
+}
+
+engineToggle.querySelectorAll("button").forEach(b => {
+  b.addEventListener("click", () => {
+    if (b.disabled || b.dataset.engine === engine) return;
+    setEngine(b.dataset.engine);
+  });
+});
 
 for (const f of FX_DEFS) {
   const el = document.createElement("label");
@@ -494,6 +589,7 @@ const bindSlider = (el, valEl, fmt) => {
   el.addEventListener("input", fn); fn();
 };
 bindSlider(speedEl, $("speedVal"), (v) => parseFloat(v).toFixed(2) + "×");
+bindSlider(pitchEl, $("pitchVal"), (v) => (v > 0 ? "+" : "") + v + " st");
 bindSlider(reverbAmt, $("reverbAmountVal"), (v) => parseFloat(v).toFixed(2));
 
 textEl.addEventListener("keydown", (e) => {
@@ -514,8 +610,9 @@ function applyPreset(p) {
     el.classList.toggle("active", el.dataset.preset === p.id));
   clearFx();
   voiceSel.value = p.voice;
-  speedEl.value  = p.speed;        speedEl.dispatchEvent(new Event("input"));
-  reverbAmt.value = p.reverbAmount; reverbAmt.dispatchEvent(new Event("input"));
+  speedEl.value  = p.speed;          speedEl.dispatchEvent(new Event("input"));
+  pitchEl.value  = p.pitch ?? 0;     pitchEl.dispatchEvent(new Event("input"));
+  reverbAmt.value = p.reverbAmount;  reverbAmt.dispatchEvent(new Event("input"));
   for (const f of FX_DEFS) setFx(f.key, p.fx[f.key]);
 }
 
@@ -533,8 +630,35 @@ function setStatus({ text, ready = false, progress = null }) {
 }
 function hideStatus() { setTimeout(() => statusEl.classList.add("hidden"), 500); }
 
-/* ---------- Boot: show cached voices, no forced download ---------- */
+/* ---------- Boot: probe Mac server, set default engine ---------- */
+async function probeMacServer() {
+  try {
+    const r = await fetch("/voices", { cache: "no-store" });
+    if (!r.ok) return false;
+    const list = await r.json();
+    if (!Array.isArray(list) || list.length === 0) return false;
+    MAC_VOICES = list;
+    return true;
+  } catch { return false; }
+}
+
 (async function boot() {
+  rebuildVoices();
+  rebuildPresets();
+  applyPreset(presetsForEngine()[0]);
+
+  const macOk = await probeMacServer();
+  if (macOk) {
+    const macBtn = engineToggle.querySelector('button[data-engine="mac"]');
+    macBtn.disabled = false;
+    macBtn.title = "";
+    setEngine("mac");
+    setStatus({ text: `Mac mode. ${MAC_VOICES.length} voices.`, ready: true });
+    hideStatus();
+    goBtn.disabled = false;
+    return;
+  }
+
   try {
     const cached = await tts.stored();
     if (cached && cached.length > 0) {
@@ -597,7 +721,7 @@ async function decodeWav(blob) {
   return buf;
 }
 
-async function renderWithEffects(inputBuffer, { speed, fx }) {
+async function renderWithEffects(inputBuffer, { speed, pitch, fx }) {
   const sr = inputBuffer.sampleRate;
   const effectiveSamples = Math.ceil(inputBuffer.length / speed);
   const extraTail = fx.reverb ? sr * 2.4 : fx.delay ? sr * 1.5 : Math.floor(sr * 0.15);
@@ -607,6 +731,7 @@ async function renderWithEffects(inputBuffer, { speed, fx }) {
   const src = offline.createBufferSource();
   src.buffer = inputBuffer;
   src.playbackRate.value = speed;
+  if (pitch) src.detune.value = pitch * 100;
 
   let node = src;
   if (fx.highpass) {
@@ -702,26 +827,51 @@ async function generate() {
     if (!text) throw new Error("Enter tag text");
     const voiceId = voiceSel.value;
     const speed = parseFloat(speedEl.value);
+    const pitch = parseFloat(pitchEl.value);
     const fx = { reverbAmount: parseFloat(reverbAmt.value) };
     for (const cb of fxGrid.querySelectorAll("input[type=checkbox]")) {
       fx[cb.dataset.fx] = cb.checked;
     }
 
-    await ensureVoice(voiceId);
-
-    setStatus({ text: "Synthesizing…" });
-    const wavBlob = await tts.predict({ text, voiceId });
-    const inputBuffer = await decodeWav(wavBlob);
-
-    setStatus({ text: "Applying effects…" });
-    const rendered = await renderWithEffects(inputBuffer, { speed, fx });
-    const outBlob = audioBufferToWavBlob(rendered);
+    let outBlob, duration;
+    if (engine === "mac") {
+      setStatus({ text: `Synthesizing via say (${voiceId})…` });
+      const res = await fetch("/generate", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text, voice: voiceId, format: "wav",
+          effects: {
+            rate: speed, pitch, reverbAmount: fx.reverbAmount,
+            reverb: !!fx.reverb, delay: !!fx.delay,
+            distortion: !!fx.distortion, distortionAmount: 0.35,
+            compression: !!fx.compression,
+            lowpass: !!fx.lowpass, highpass: !!fx.highpass, bass: !!fx.bass,
+          },
+        }),
+      });
+      if (!res.ok) {
+        let msg = `Server ${res.status}`;
+        try { msg = (await res.json()).error || msg; } catch {}
+        throw new Error(msg);
+      }
+      outBlob = await res.blob();
+      try { duration = (await decodeWav(outBlob)).duration; } catch { duration = 0; }
+    } else {
+      await ensureVoice(voiceId);
+      setStatus({ text: "Synthesizing…" });
+      const wavBlob = await tts.predict({ text, voiceId });
+      const inputBuffer = await decodeWav(wavBlob);
+      setStatus({ text: "Applying effects…" });
+      const rendered = await renderWithEffects(inputBuffer, { speed, pitch, fx });
+      outBlob = audioBufferToWavBlob(rendered);
+      duration = rendered.duration;
+    }
 
     const url = URL.createObjectURL(outBlob);
     if (playerEl.dataset.url) URL.revokeObjectURL(playerEl.dataset.url);
     playerEl.src = url; playerEl.dataset.url = url;
     dlEl.href = url; dlEl.download = `tag-${Date.now()}.wav`;
-    stampEl.textContent = `${(outBlob.size / 1024).toFixed(1)} KB · ${rendered.duration.toFixed(2)}s`;
+    stampEl.textContent = `${(outBlob.size / 1024).toFixed(1)} KB · ${duration.toFixed(2)}s`;
     outputEl.classList.add("show");
     playerEl.play().catch(() => {});
     statusEl.classList.add("hidden");
@@ -737,7 +887,6 @@ async function generate() {
 }
 
 goBtn.addEventListener("click", generate);
-applyPreset(PRESETS[0]);
 </script>
 </body>
 </html>
